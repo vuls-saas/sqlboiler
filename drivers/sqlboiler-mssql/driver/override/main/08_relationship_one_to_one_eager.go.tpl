@@ -8,7 +8,7 @@
 		{{- $fcol := $ftable.Column $rel.ForeignColumn -}}
 		{{- $usesPrimitives := usesPrimitives $.Tables $rel.Table $rel.Column $rel.ForeignTable $rel.ForeignColumn -}}
 		{{- $arg := printf "maybe%s" $ltable.UpSingular -}}
-		{{- $canSoftDelete := (getTable $.Tables $rel.ForeignTable).CanSoftDelete }}
+		{{- $canSoftDelete := (getTable $.Tables $rel.ForeignTable).CanSoftDelete $.AutoColumns.Deleted }}
 // Load{{$relAlias.Local}} allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-1 relationship.
 func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boil.Executor{{else}}ctx context.Context, e boil.ContextExecutor{{end}}, singular bool, {{$arg}} interface{}, mods queries.Applicator) error {
@@ -54,7 +54,7 @@ func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boi
 
 	query := NewQuery(
 	    qm.From(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}`),
-	    qm.Where(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.{{.ForeignColumn}} = ANY(?)`, buildAnyArgumentFromArray(args)),
+        qm.WhereIn(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.{{.ForeignColumn}} in ?`, args...),
 	    {{if and $.AddSoftDeletes $canSoftDelete -}}
 	    qmhelper.WhereIsNull(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.deleted_at`),
 	    {{- end}}

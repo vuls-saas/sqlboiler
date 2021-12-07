@@ -4,6 +4,71 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v4.8.3] - 2021-11-16
+
+### Fixed
+
+- Fix bad use of titlecase in mysql enum name generation
+
+## [v4.8.2] - 2021-11-16
+
+### Fixed
+
+- Fix regression in enum name generation
+
+## [v4.8.1] - 2021-11-14
+
+### Fixed
+
+- Fix a regression in the soft delete test template generation introduced in
+  4.8.1
+
+## [v4.8.0] - 2021-11-14
+
+### Added
+
+- Add `--add-enum-types` to create distinct enum types instead of strings
+  (thanks @stephenamo)
+
+### Fixed
+
+- Fix a regression in soft delete generation introduced in 4.7.1
+  (thanks @stephenamo)
+
+## [v4.7.1] - 2021-09-30
+
+### Changed
+
+- Change template locations to templates/{main,test}. This unfortunate move
+  is necessary to preserve old behavior.
+
+### Fixed
+
+- Revert change to boilingcore.New() both in behavior and function signature
+
+## [v4.7.0] - 2021-09-26
+
+### Added
+
+- Add configuration for overriding custom timestamp column names
+  (thanks @stephanafamo)
+- Add support for arguments to order by (thanks @emwalker and @alexdor)
+- Add support for comments to mysql (thanks @Wuvist)
+
+### Fixed
+
+- Fix CVEs in transitive dependencies by bumping cobra & viper
+- Fix inconsistent generation of IsNull/IsNotNull where helpers for types that
+  appear both as null and not null in the database.
+- JSON unmarshalling null into types.NullDecimal will no longer panic. String
+  and format have been overridden to return "nil" when the underlying decimal
+  is nil instead of crashing.
+
+### Removed
+
+- Removed bindata in favor of go:embed. This is not a breaking change as there
+  are no longer supported versions of Go that do not support go:embed.
+
 ## [v4.6.0] - 2021-06-06
 
 ### Added

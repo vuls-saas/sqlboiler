@@ -9,7 +9,7 @@
 		{{- $usesPrimitives := usesPrimitives $.Tables $rel.Table $rel.Column $rel.ForeignTable $rel.ForeignColumn -}}
 		{{- $arg := printf "maybe%s" $ltable.UpSingular -}}
 		{{- $schemaForeignTable := $rel.ForeignTable | $.SchemaTable -}}
-		{{- $canSoftDelete := (getTable $.Tables $rel.ForeignTable).CanSoftDelete }}
+		{{- $canSoftDelete := (getTable $.Tables $rel.ForeignTable).CanSoftDelete $.AutoColumns.Deleted }}
 // Load{{$relAlias.Local}} allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boil.Executor{{else}}ctx context.Context, e boil.ContextExecutor{{end}}, singular bool, {{$arg}} interface{}, mods queries.Applicator) error {
@@ -27,7 +27,7 @@ func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boi
 		if object.R == nil {
 			object.R = &{{$ltable.DownSingular}}R{}
 		}
-		args = append(args, object.{{.Column | titleCase}})
+		args = append(args, object.{{$col}})
 	} else {
 		Outer:
 		for _, obj := range slice {
@@ -45,7 +45,7 @@ func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boi
 				}
 			}
 
-			args = append(args, obj.{{.Column | titleCase}})
+			args = append(args, obj.{{$col}})
 		}
 	}
 
@@ -60,7 +60,7 @@ func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boi
 		qm.Select("{{$foreignTable.Columns | columnNames | prefixStringSlice (print $schemaForeignTable ".") | join ", "}}, {{id 0 | $.Quotes}}.{{.JoinLocalColumn | $.Quotes}}"),
 		qm.From("{{$schemaForeignTable}}"),
 		qm.InnerJoin("{{$schemaJoinTable}} as {{id 0 | $.Quotes}} on {{$schemaForeignTable}}.{{.ForeignColumn | $.Quotes}} = {{id 0 | $.Quotes}}.{{.JoinForeignColumn | $.Quotes}}"),
-        qm.Where("{{id 0 | $.Quotes}}.{{.JoinLocalColumn | $.Quotes}} = ANY(?)", buildAnyArgumentFromArray(args)),
+		qm.WhereIn("{{id 0 | $.Quotes}}.{{.JoinLocalColumn | $.Quotes}} in ?", args...),
 		{{if and $.AddSoftDeletes $canSoftDelete -}}
 		qmhelper.WhereIsNull("{{$schemaForeignTable}}.{{"deleted_at" | $.Quotes}}"),
 		{{- end}}
@@ -68,7 +68,7 @@ func ({{$ltable.DownSingular}}L) Load{{$relAlias.Local}}({{if $.NoContext}}e boi
 		{{else -}}
 	query := NewQuery(
 	    qm.From(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}`),
-	    qm.WhereIn(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.{{.ForeignColumn}} = ANY(?)`, buildAnyArgumentFromArray(args)),
+	    qm.WhereIn(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.{{.ForeignColumn}} in ?`, args...),
 	    {{if and $.AddSoftDeletes $canSoftDelete -}}
 	    qmhelper.WhereIsNull(`{{if $.Dialect.UseSchema}}{{$.Schema}}.{{end}}{{.ForeignTable}}.deleted_at`),
 	    {{- end}}
