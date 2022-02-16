@@ -1,3 +1,5 @@
+{{- if .Table.IsView -}}
+{{- else -}}
 {{- $alias := .Aliases.Table .Table.Name -}}
 {{- $schemaTable := .Table.Name | .SchemaTable -}}
 {{- $canSoftDelete := .Table.CanSoftDelete $.AutoColumns.Deleted -}}
@@ -142,6 +144,21 @@ func (q {{$alias.DownSingular}}Query) DeleteAllG({{if not .NoContext}}ctx contex
 // DeleteAllP deletes all rows, and panics on error.
 func (q {{$alias.DownSingular}}Query) DeleteAllP({{if .NoContext}}exec boil.Executor{{else}}ctx context.Context, exec boil.ContextExecutor{{end}}{{if $soft}}, hardDelete bool{{end}}) {{if not .NoRowsAffected}}int64{{end -}} {
 	{{if not .NoRowsAffected}}rowsAff, {{end -}} err := q.DeleteAll({{if not .NoContext}}ctx, {{end -}} exec{{if $soft}}, hardDelete{{end}})
+	if err != nil {
+		panic(boil.WrapErr(err))
+	}
+	{{- if not .NoRowsAffected}}
+
+	return rowsAff
+	{{end -}}
+}
+
+{{end -}}
+
+{{if and .AddGlobal .AddPanic -}}
+// DeleteAllGP deletes all rows, and panics on error.
+func (q {{$alias.DownSingular}}Query) DeleteAllGP({{if not .NoContext}}ctx context.Context, {{end}}{{if $soft}}hardDelete bool{{end}}) {{if not .NoRowsAffected}}int64{{end -}} {
+	{{if not .NoRowsAffected}}rowsAff, {{end -}} err := q.DeleteAll({{if .NoContext}}boil.GetDB(){{else}}ctx, boil.GetContextDB(){{end}}{{if $soft}}, hardDelete{{end}})
 	if err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -339,3 +356,5 @@ func (o {{$alias.UpSingular}}Slice) DeleteAll({{if .NoContext}}exec boil.Executo
 
 	return {{if not .NoRowsAffected}}rowsAff, {{end -}} nil
 }
+
+{{- end -}}
