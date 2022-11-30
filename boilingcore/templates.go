@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -175,7 +175,7 @@ type fileLoader string
 
 func (f fileLoader) Load() ([]byte, error) {
 	fname := string(f)
-	b, err := ioutil.ReadFile(fname)
+	b, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load template: %s", fname)
 	}
@@ -312,9 +312,11 @@ var templateFunctions = template.FuncMap{
 	"whereClause": strmangle.WhereClause,
 
 	// Alias and text helping
-	"aliasCols":      func(ta TableAlias) func(string) string { return ta.Column },
-	"usesPrimitives": usesPrimitives,
-	"isPrimitive":    isPrimitive,
+	"aliasCols":              func(ta TableAlias) func(string) string { return ta.Column },
+	"usesPrimitives":         usesPrimitives,
+	"isPrimitive":            isPrimitive,
+	"isNullPrimitive":        isNullPrimitive,
+	"convertNullToPrimitive": convertNullToPrimitive,
 	"splitLines": func(a string) []string {
 		if a == "" {
 			return nil

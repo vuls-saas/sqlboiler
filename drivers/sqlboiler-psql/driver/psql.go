@@ -55,7 +55,7 @@ type columnIdentifier struct {
 }
 
 // Templates that should be added/overridden
-func (p PostgresDriver) Templates() (map[string]string, error) {
+func (p *PostgresDriver) Templates() (map[string]string, error) {
 	tpls := make(map[string]string)
 	fs.WalkDir(templates, "override", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -118,6 +118,10 @@ func (p *PostgresDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo
 	p.version, err = p.getVersion()
 	if err != nil {
 		return nil, errors.Wrap(err, "sqlboiler-psql failed to get database version")
+	}
+
+	if err = p.loadUniqueColumns(); err != nil {
+		return nil, errors.Wrap(err, "sqlboiler-psql failed to load unique columns")
 	}
 
 	dbinfo = &drivers.DBInfo{
@@ -193,7 +197,6 @@ func (p *PostgresDriver) TableNames(schema string, whitelist, blacklist []string
 	query += ` order by table_name;`
 
 	rows, err := p.conn.Query(query, args...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +254,6 @@ func (p *PostgresDriver) ViewNames(schema string, whitelist, blacklist []string)
 	query += ` order by table_name;`
 
 	rows, err := p.conn.Query(query, args...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -384,9 +386,6 @@ func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blackl
 // and column types and returns those as a []Column after TranslateColumnType()
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
-	if err := p.loadUniqueColumns(); err != nil {
-		return nil, errors.Wrapf(err, "unable to load unique data")
-	}
 	var columns []drivers.Column
 	args := []interface{}{schema, tableName}
 
@@ -501,7 +500,18 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 		) as column_full_type,
 
 		c.udt_name,
-		e.data_type as array_type,
+		(
+			SELECT
+				data_type
+			FROM
+				information_schema.element_types e
+			WHERE
+				c.table_catalog = e.object_catalog
+				AND c.table_schema = e.object_schema
+				AND c.table_name = e.object_name
+				AND 'TABLE' = e.object_type
+				AND c.dtd_identifier = e.collection_type_identifier
+		) AS array_type,
 		c.domain_name,
 		c.column_default,
 
@@ -524,10 +534,7 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 
 		from information_schema.columns as c
 		inner join pg_namespace as pgn on pgn.nspname = c.udt_schema
-		left join pg_type pgt on c.data_type = 'USER-DEFINED' and pgn.oid = pgt.typnamespace and c.udt_name = pgt.typname
-		left join information_schema.element_types e
-			on ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
-			= (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier)),
+		left join pg_type pgt on c.data_type = 'USER-DEFINED' and pgn.oid = pgt.typnamespace and c.udt_name = pgt.typname,
 		lateral (select
 			(
 				case when pgt.typtype = 'e'
@@ -593,7 +600,6 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 	query += ` order by c.ordinal_position;`
 
 	rows, err := p.conn.Query(query, args...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -971,7 +977,6 @@ func (p PostgresDriver) Imports() (importers.Collection, error) {
 				`"database/sql"`,
 				`"fmt"`,
 				`"io"`,
-				`"io/ioutil"`,
 				`"os"`,
 				`"os/exec"`,
 				`"regexp"`,
