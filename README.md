@@ -103,6 +103,7 @@ Table of Contents
         * [Where is the homepage?](#where-is-the-homepage)
         * [Why are the auto-generated tests failing?](#why-are-the-auto-generated-tests-failing)
   * [Benchmarks](#benchmarks)
+  * [Third-Party Extensions](#third-party-extensions)
 
 ## About SQL Boiler
 
@@ -642,9 +643,33 @@ down_singular = "teamName"
   foreign = "Videos"
 ```
 
+##### Foreign Keys
+
+You can add foreign keys not defined in the database to your models using the following configuration:
+
+```toml
+[foreign_keys.jet_pilots_fkey]
+table = "jets"
+column = "pilot_id"
+foreign_table = "pilots"
+foreign_column = "id"
+
+[foreign_keys.pilot_language_pilots_fkey]
+table = "pilot_languages"
+column = "pilot_id"
+foreign_table = "pilots"
+foreign_column = "id"
+
+[foreign_keys.pilot_language_languages_fkey]
+table = "pilot_languages"
+column = "language_id"
+foreign_table = "languages"
+foreign_column = "id"
+```
+
 ##### Inflections
 
-With inflections, you can control the rules sqlboiler uses to generates singular/plural variants. This is useful if a certain word or suffix is used multiple times and you do not wnat to create aliases for every instance.
+With inflections, you can control the rules sqlboiler uses to generates singular/plural variants. This is useful if a certain word or suffix is used multiple times and you do not want to create aliases for every instance.
 
 ```toml
 [inflections.plural]
@@ -784,6 +809,7 @@ templates/
 ```
 
 The output files of which would be:
+
 ```
 output_dir/
 ├── boil_queries.go
@@ -1186,8 +1212,8 @@ Where(
 )
 
 // WHERE IN clause building
-WhereIn("name, age in ?", "John", 24, "Tim", 33) // Generates: WHERE ("name","age") IN (($1,$2),($3,$4))
-WhereIn(fmt.Sprintf("%s, %s in ?", models.PilotColumns.Name, models.PilotColumns.Age, "John", 24, "Tim", 33))
+WhereIn("(name, age) in ?", "John", 24, "Tim", 33) // Generates: WHERE ("name","age") IN (($1,$2),($3,$4))
+WhereIn(fmt.Sprintf("(%s, %s) in ?", models.PilotColumns.Name, models.PilotColumns.Age), "John", 24, "Tim", 33)
 AndIn("weight in ?", 84)
 AndIn(models.PilotColumns.Weight + " in ?", 84)
 OrIn("height in ?", 183, 177, 204)
@@ -2070,3 +2096,11 @@ BenchmarkBoilRawBind/boil-8          200000    11519 ns/op    4638 B/op    55 al
 <img src="http://i.imgur.com/LWo10M9.png"/><img src="http://i.imgur.com/Td15owT.png"/><img src="http://i.imgur.com/45XXw4K.png"/>
 
 <img src="http://i.imgur.com/lpP8qds.png"/><img src="http://i.imgur.com/hLyH3jQ.png"/><img src="http://i.imgur.com/C2v10t3.png"/>
+
+## Third-Party Extensions
+
+Below are extensions for SQL Boiler developed by community, use them at your own risk.
+
+- [sqlboiler-extensions](https://github.com/tiendc/sqlboiler-extensions): Generates additional methods for models, particlarly for bulk operations.
+- [boilingseed](https://github.com/stephenafamo/boilingseed): Generates helpers to seed the database with data.
+- [boilingfactory](https://github.com/stephenafamo/boilingfactory): Generates helpers to create and insert test models on the fly.

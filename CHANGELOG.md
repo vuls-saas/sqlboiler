@@ -4,6 +4,55 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.15.0] - 2023-08-18
+
+### Added
+
+- Add LIKE and ILIKE Operators (thanks @jerrysalonen)
+- Allow defining foreign key relationships in config file (thanks @chrisngyn)
+
+### Fixed
+
+- Fix missing types import on non nullable char column in postgres driver (thanks @Ebbele)
+- Fix struct len check for columns whitelist and blacklist in sqlite driver (thanks @oscar-refacton)
+- Properly clean name before title casing (thanks @MJacred)
+- Fix parsing pgeo point in scientific notation format (thanks @zhongduo)
+- Downgrade decimal version before decompose interface (thanks @zhongduo)
+- Fix UPSERT query to respect conflict_target in postgres driver (thanks @agis)
+- Fix column type conversion in SQLite3 driver, specifically, columns with types such as `FLOAT(2, 1)` or `TYNYINT(1)` (thanks @Jumpaku)
+
+### Security
+
+- When writing comments, also split comments by `\r` since several dialects also recognise this as a new line character
+
+## [v4.14.2] - 2023-03-21
+
+### Fixed
+
+- Fix qm.WithDeleted helper with a custom soft delete column (thanks @lopezator)
+- Skipping empty values from the update list (thanks @bvigar)
+
+## [v4.14.1] - 2023-01-31
+
+### Fixed
+
+- Fix composite key handling in sqlite3 driver (thanks @vortura)
+- Use correct executor for relationship test when `no-context` is true
+
+## [v4.14.0] - 2022-12-14
+
+### Added
+
+- Allow calling struct.Exists() without having to pass on PK fields (thanks @MJacred)
+
+### Changed
+
+- Stop using deprecated methods from io/ioutil (thanks @stefafafan)
+
+### Fixed
+
+- Fixed correct hooks when loading relationships to-one (thanks @parnic)
+
 ## [v4.13.0] - 2022-08-28
 
 ### Added

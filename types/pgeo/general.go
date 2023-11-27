@@ -19,7 +19,7 @@ func iToS(src interface{}) (string, error) {
 	case []byte:
 		val = string(src.([]byte))
 	default:
-		err = errors.New(fmt.Sprintf("incompatible type %v", reflect.ValueOf(src).Kind().String()))
+		err = fmt.Errorf("incompatible type %v", reflect.ValueOf(src).Kind().String())
 	}
 
 	return val, err
@@ -51,7 +51,7 @@ func formatPoints(points []Point) string {
 	return strings.Join(pts, ",")
 }
 
-var parsePointRegexp = regexp.MustCompile(`^\((-?[0-9]+(?:\.[0-9]+)?),(-?[0-9]+(?:\.[0-9]+)?)\)$`)
+var parsePointRegexp = regexp.MustCompile(`^\(([0-9\.Ee-]+),([0-9\.Ee-]+)\)$`)
 
 func parsePoint(pt string) (Point, error) {
 	var point = Point{}
@@ -73,7 +73,7 @@ func parsePoint(pt string) (Point, error) {
 	return point, nil
 }
 
-var parsePointsRegexp = regexp.MustCompile(`\((?:-?[0-9]+(?:\.[0-9]+)?),(?:-?[0-9]+(?:\.[0-9]+)?)\)`)
+var parsePointsRegexp = regexp.MustCompile(`\(([0-9\.Ee-]+),([0-9\.Ee-]+)\)`)
 
 func parsePoints(pts string) ([]Point, error) {
 	var points = []Point{}

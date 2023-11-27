@@ -9,9 +9,10 @@ import (
 	"io/fs"
 	"strings"
 
+	_ "modernc.org/sqlite"
+
 	"github.com/volatiletech/sqlboiler/v4/drivers"
 	"github.com/volatiletech/sqlboiler/v4/importers"
-	_ "modernc.org/sqlite"
 )
 
 //go:embed override
@@ -30,8 +31,9 @@ func Assemble(config drivers.Config) (dbinfo *drivers.DBInfo, err error) {
 // SQLiteDriver holds the database connection string and a handle
 // to the database connection.
 type SQLiteDriver struct {
-	connStr string
-	dbConn  *sql.DB
+	connStr           string
+	dbConn            *sql.DB
+	configForeignKeys []drivers.ForeignKey
 }
 
 // Templates that should be added/overridden
@@ -73,6 +75,7 @@ func (s SQLiteDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo, e
 	concurrency := config.DefaultInt(drivers.ConfigConcurrency, drivers.DefaultConcurrency)
 
 	s.connStr = SQLiteBuildQueryString(dbname)
+	s.configForeignKeys = config.MustForeignKeys(drivers.ConfigForeignKeys)
 	s.dbConn, err = sql.Open("sqlite", s.connStr)
 	if err != nil {
 		return nil, fmt.Errorf("sqlboiler-sqlite failed to connect to database: %w", err)
@@ -349,14 +352,14 @@ func (s SQLiteDriver) Columns(schema, tableName string, whitelist, blacklist []s
 
 	nPkeys := 0
 	for _, column := range tinfo {
-		if column.Pk == 1 {
+		if column.Pk != 0 {
 			nPkeys++
 		}
 	}
 
 ColumnLoop:
 	for _, column := range tinfo {
-		if len(whitelist) != 0 {
+		if len(whiteColumns) != 0 {
 			found := false
 			for _, white := range whiteColumns {
 				if white == column.Name {
@@ -367,7 +370,7 @@ ColumnLoop:
 			if !found {
 				continue
 			}
-		} else if len(blacklist) != 0 {
+		} else if len(blackColumns) != 0 {
 			for _, black := range blackColumns {
 				if black == column.Name {
 					continue ColumnLoop
@@ -451,6 +454,14 @@ func (s SQLiteDriver) PrimaryKeyInfo(schema, tableName string) (*drivers.Primary
 
 // ForeignKeyInfo retrieves the foreign keys for a given table name.
 func (s SQLiteDriver) ForeignKeyInfo(schema, tableName string) ([]drivers.ForeignKey, error) {
+	dbForeignKeys, err := s.foreignKeyInfoFromDB(schema, tableName)
+	if err != nil {
+		return nil, fmt.Errorf("read foreign keys info from db: %w", err)
+	}
+
+	return drivers.CombineConfigAndDBForeignKeys(s.configForeignKeys, tableName, dbForeignKeys), nil
+}
+func (s SQLiteDriver) foreignKeyInfoFromDB(schema, tableName string) ([]drivers.ForeignKey, error) {
 	var fkeys []drivers.ForeignKey
 
 	query := fmt.Sprintf("PRAGMA foreign_key_list('%s')", tableName)
@@ -523,7 +534,7 @@ func (SQLiteDriver) TranslateColumnType(c drivers.Column) drivers.Column {
 			c.Type = "null.String"
 		}
 	} else {
-		switch c.DBType {
+		switch strings.Split(c.DBType, "(")[0] {
 		case "INT", "INTEGER", "BIGINT":
 			c.Type = "int64"
 		case "TINYINT", "INT8":
