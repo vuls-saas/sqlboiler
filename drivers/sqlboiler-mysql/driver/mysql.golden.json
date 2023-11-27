@@ -23,10 +23,12 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": null,
 			"is_join_table": false,
 			"to_one_relationships": [
@@ -71,10 +73,12 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": null,
 			"is_join_table": false,
 			"to_one_relationships": null,
@@ -1899,10 +1903,12 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": null,
 			"is_join_table": false,
 			"to_one_relationships": null,
@@ -1935,10 +1941,12 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": null,
 			"is_join_table": false,
 			"to_one_relationships": null,
@@ -2008,11 +2016,13 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"video_id",
 					"tag_id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": [
 				{
 					"table": "video_tags",
@@ -2098,10 +2108,12 @@
 			],
 			"p_key": {
 				"name": "PRIMARY",
+				"title_case": "",
 				"columns": [
 					"id"
 				]
 			},
+			"u_keys": null,
 			"f_keys": [
 				{
 					"table": "videos",

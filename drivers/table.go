@@ -13,6 +13,7 @@ type Table struct {
 	Columns    []Column `json:"columns"`
 
 	PKey  *PrimaryKey  `json:"p_key"`
+	UKeys []UniqueKey  `json:"u_keys"`
 	FKeys []ForeignKey `json:"f_keys"`
 
 	IsJoinTable bool `json:"is_join_table"`

@@ -107,6 +107,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolP("add-soft-deletes", "", false, "Enable soft deletion by updating deleted_at timestamp")
 	rootCmd.PersistentFlags().BoolP("add-enum-types", "", false, "Enable generation of types for enums")
 	rootCmd.PersistentFlags().StringP("enum-null-prefix", "", "Null", "Name prefix of nullable enum types")
+	rootCmd.PersistentFlags().BoolP("add-strict-upsert", "", false, "Enable generation for strict upsert")
 	rootCmd.PersistentFlags().BoolP("version", "", false, "Print the version")
 	rootCmd.PersistentFlags().BoolP("wipe", "", false, "Delete the output folder (rm -rf) before generation to ensure sanity")
 	rootCmd.PersistentFlags().StringP("struct-tag-casing", "", "snake", "Decides the casing for go structure tag names. camel, title or snake (default snake)")
@@ -162,6 +163,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 		AddSoftDeletes:    viper.GetBool("add-soft-deletes"),
 		AddEnumTypes:      viper.GetBool("add-enum-types"),
 		EnumNullPrefix:    viper.GetString("enum-null-prefix"),
+		AddStrictUpsert:   viper.GetBool("add-strict-upsert"),
 		NoContext:         viper.GetBool("no-context"),
 		NoTests:           viper.GetBool("no-tests"),
 		NoHooks:           viper.GetBool("no-hooks"),

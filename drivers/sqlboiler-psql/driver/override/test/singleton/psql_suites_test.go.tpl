@@ -3,7 +3,13 @@ func TestUpsert(t *testing.T) {
   {{- if or $table.IsJoinTable $table.IsView -}}
   {{- else -}}
   {{- $alias := $.Aliases.Table $table.Name}}
-  t.Run("{{$alias.UpPlural}}", test{{$alias.UpPlural}}Upsert)
+  {{if $.AddStrictUpsert -}}
+  t.Run("{{$alias.UpPlural}}", test{{$alias.UpPlural}}UpsertBy{{$table.PKey.TitleCase}})
+  {{range $ukey := $table.UKeys -}}
+  t.Run("{{$alias.UpPlural}}", test{{$alias.UpPlural}}UpsertBy{{$ukey.TitleCase}})
+  {{end -}}
+  t.Run("{{$alias.UpPlural}}", test{{$alias.UpPlural}}UpsertDoNothing)
+  {{- end -}}
   {{end -}}
   {{- end -}}
 }

@@ -43,6 +43,7 @@ type templateData struct {
 	AddSoftDeletes    bool
 	AddEnumTypes      bool
 	EnumNullPrefix    string
+	AddStrictUpsert   bool
 	NoContext         bool
 	NoHooks           bool
 	NoAutoTimestamps  bool

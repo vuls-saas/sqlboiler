@@ -141,6 +141,7 @@ func (s *State) Run() error {
 		AddSoftDeletes:    s.Config.AddSoftDeletes,
 		AddEnumTypes:      s.Config.AddEnumTypes,
 		EnumNullPrefix:    s.Config.EnumNullPrefix,
+		AddStrictUpsert:   s.Config.AddStrictUpsert,
 		NoContext:         s.Config.NoContext,
 		NoHooks:           s.Config.NoHooks,
 		NoAutoTimestamps:  s.Config.NoAutoTimestamps,

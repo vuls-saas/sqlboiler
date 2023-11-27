@@ -452,6 +452,10 @@ func (s SQLiteDriver) PrimaryKeyInfo(schema, tableName string) (*drivers.Primary
 	return pk, nil
 }
 
+func (s SQLiteDriver) UniqueKeyInfo(schema, tableName string) ([]drivers.UniqueKey, error) {
+	return nil, nil
+}
+
 // ForeignKeyInfo retrieves the foreign keys for a given table name.
 func (s SQLiteDriver) ForeignKeyInfo(schema, tableName string) ([]drivers.ForeignKey, error) {
 	dbForeignKeys, err := s.foreignKeyInfoFromDB(schema, tableName)
