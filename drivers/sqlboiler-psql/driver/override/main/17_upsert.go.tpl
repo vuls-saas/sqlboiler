@@ -4,7 +4,7 @@
 
 {{ if .AddStrictUpsert }}
 
-{{if $.AddGlobal -}}
+{{if .AddGlobal -}}
 // UpsertBy{{.Table.PKey.TitleCase}}G attempts an insert, and does an update or ignore on conflict.
 func (o *{{$alias.UpSingular}}) UpsertBy{{.Table.PKey.TitleCase}}G({{if not $.NoContext}}ctx context.Context, {{end -}} updateColumns, insertColumns boil.Columns) error {
 	return o.UpsertBy{{.Table.PKey.TitleCase}}({{if $.NoContext}}boil.GetDB(){{else}}ctx, boil.GetContextDB(){{end}}, updateColumns, insertColumns)
@@ -12,7 +12,7 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{.Table.PKey.TitleCase}}G({{if not $.No
 
 {{end -}}
 
-{{if and $.AddGlobal $.AddPanic -}}
+{{if and .AddGlobal .AddPanic -}}
 // UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
 func (o *{{$alias.UpSingular}}) UpsertGP({{if not $.NoContext}}ctx context.Context, {{end -}} updateColumns, insertColumns boil.Columns) {
 	if err := o.UpsertBy{{.Table.PKey.TitleCase}}({{if $.NoContext}}boil.GetDB(){{else}}ctx, boil.GetContextDB(){{end}}, updateColumns, insertColumns); err != nil {
@@ -22,7 +22,7 @@ func (o *{{$alias.UpSingular}}) UpsertGP({{if not $.NoContext}}ctx context.Conte
 
 {{end -}}
 
-{{if $.AddPanic -}}
+{{if .AddPanic -}}
 // UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
 // UpsertP panics on error.
 func (o *{{$alias.UpSingular}}) UpsertP({{if $.NoContext}}exec boil.Executor{{else}}ctx context.Context, exec boil.ContextExecutor{{end}}, updateColumns, insertColumns boil.Columns) {
@@ -34,6 +34,7 @@ func (o *{{$alias.UpSingular}}) UpsertP({{if $.NoContext}}exec boil.Executor{{el
 {{end -}}
 
 // UpsertBy{{.Table.PKey.TitleCase}} attempts an insert using an executor, and does an update or ignore on conflict.
+// Primary Key is {{.Table.PKey.Columns}}
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
 func (o *{{$alias.UpSingular}}) UpsertBy{{.Table.PKey.TitleCase}}({{if $.NoContext}}exec boil.Executor{{else}}ctx context.Context, exec boil.ContextExecutor{{end}}, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
@@ -83,7 +84,7 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{.Table.PKey.TitleCase}}({{if $.NoConte
 	var err error
 
 	if !cached {
-		insert, ret := insertColumns.InsertColumnSet(
+		insert, _ := insertColumns.InsertColumnSet(
 			{{$alias.DownSingular}}AllColumns,
 			{{$alias.DownSingular}}ColumnsWithDefault,
 			{{$alias.DownSingular}}ColumnsWithoutDefault,
@@ -94,20 +95,31 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{.Table.PKey.TitleCase}}({{if $.NoConte
 			{{$alias.DownSingular}}PrimaryKeyColumns,
 		)
 
+		{{if filterColumnsByAuto true .Table.Columns }}
+		insert = strmangle.SetComplement(insert, {{$alias.DownSingular}}GeneratedColumns)
+		update = strmangle.SetComplement(update, {{$alias.DownSingular}}GeneratedColumns)
+		{{- end }}
+
 		if len(update) == 0 {
 			return errors.New("{{$.PkgName}}: unable to upsert {{$.Table.Name}}, could not build update column list")
 		}
 
-        {{if gt (len .Table.PKey.Columns) 0 -}}
+		ret := strmangle.SetComplement({{$alias.DownSingular}}AllColumns, strmangle.SetIntersect(insert, update))
+
 		conflict := []string{
-        {{- range .Table.PKey.Columns -}}
-            "{{.}}",
-        {{ end -}}
-        }
-        {{ else -}}
-		conflict := make([]string, len({{$alias.DownSingular}}PrimaryKeyColumns))
-		copy(conflict, {{$alias.DownSingular}}PrimaryKeyColumns)
-        {{ end -}}
+		{{ range .Table.PKey.Columns -}}
+				"{{.}}",
+		{{ end -}}
+		}
+
+		if len(conflict) == 0 && len(update) != 0 {
+			if len({{$alias.DownSingular}}PrimaryKeyColumns) == 0 {
+				return errors.New("{{.PkgName}}: unable to upsert {{.Table.Name}}, could not build conflict column list")
+			}
+
+			conflict = make([]string, len({{$alias.DownSingular}}PrimaryKeyColumns))
+			copy(conflict, {{$alias.DownSingular}}PrimaryKeyColumns)
+		}
 
 		cache.query = buildUpsertQueryPostgres(dialect, "{{$schemaTable}}", true, ret, update, conflict, insert)
 
@@ -208,6 +220,7 @@ func (o *{{$alias.UpSingular}}) UpsertP({{if $.NoContext}}exec boil.Executor{{el
 
 // UpsertBy{{$ukey.TitleCase}} attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+// Unique Key is {{$ukey.Columns}}
 func (o *{{$alias.UpSingular}}) UpsertBy{{$ukey.TitleCase}}({{if $.NoContext}}exec boil.Executor{{else}}ctx context.Context, exec boil.ContextExecutor{{end}}, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("{{$.PkgName}}: no {{$.Table.Name}} provided for upsert")
@@ -256,7 +269,7 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{$ukey.TitleCase}}({{if $.NoContext}}ex
 	var err error
 
 	if !cached {
-		insert, ret := insertColumns.InsertColumnSet(
+		insert, _ := insertColumns.InsertColumnSet(
 			{{$alias.DownSingular}}AllColumns,
 			{{$alias.DownSingular}}ColumnsWithDefault,
 			{{$alias.DownSingular}}ColumnsWithoutDefault,
@@ -271,9 +284,12 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{$ukey.TitleCase}}({{if $.NoContext}}ex
 			return errors.New("{{$.PkgName}}: unable to upsert {{$.Table.Name}}, could not build update column list")
 		}
 
+		ret := strmangle.SetComplement({{$alias.DownSingular}}AllColumns, strmangle.SetIntersect(insert, update))
+
         {{if gt (len $ukey.Columns) 0 -}}
 		conflict := []string{
-        {{- range $ukey.Columns -}}
+        {{ range $ukey.Columns -}}
+
             "{{.}}",
         {{ end -}}
         }
@@ -577,7 +593,7 @@ func (o *{{$alias.UpSingular}}) Upsert({{if .NoContext}}exec boil.Executor{{else
 	var err error
 
 	if !cached {
-		insert, ret := insertColumns.InsertColumnSet(
+		insert, _ := insertColumns.InsertColumnSet(
 			{{$alias.DownSingular}}AllColumns,
 			{{$alias.DownSingular}}ColumnsWithDefault,
 			{{$alias.DownSingular}}ColumnsWithoutDefault,
@@ -596,6 +612,8 @@ func (o *{{$alias.UpSingular}}) Upsert({{if .NoContext}}exec boil.Executor{{else
 		if updateOnConflict && len(update) == 0 {
 			return errors.New("{{.PkgName}}: unable to upsert {{.Table.Name}}, could not build update column list")
 		}
+
+		ret := strmangle.SetComplement({{$alias.DownSingular}}AllColumns, strmangle.SetIntersect(insert, update))
 
 		conflict := conflictColumns
 		if len(conflict) == 0 && updateOnConflict && len(update) != 0 {

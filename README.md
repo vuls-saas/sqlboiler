@@ -138,6 +138,7 @@ Table of Contents
 
 - Multi-column foreign key support
 - Materialized view support
+  - Only postgresql is supported
 
 ### Supported Databases
 
@@ -413,6 +414,7 @@ add-enum-types = true
   user    = "dbusername"
   pass    = "dbpassword"
   sslmode = "false"
+  tinyint_as_int = true
 
 [mssql]
   dbname  = "dbname"
@@ -642,6 +644,28 @@ down_singular = "teamName"
   local   = "Rags"
   foreign = "Videos"
 ```
+
+
+##### Custom Struct Tag Case
+
+Sometimes you might want to customize the case style for different purpose, for example, use camel case for json format and use snake case for yaml,
+You may create a section named `[struct-tag-cases]` to define these custom case for each different format:
+
+```toml
+[struct-tag-cases]
+toml = "snake"
+yaml = "camel"
+json = "camel"
+boil = "alias"
+```
+
+By default, the snake case will be used, so you can just setup only few formats:
+
+```toml
+[struct-tag-cases]
+json = "camel"
+```
+
 
 ##### Foreign Keys
 
@@ -1791,6 +1815,18 @@ p1.Name = "Hogan"
 // INSERT INTO pilots ("id", "name") VALUES ($1, $2)
 // ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name"
 err := p1.Upsert(ctx, db, true, []string{"id"}, boil.Whitelist("name"), boil.Whitelist("id", "name"))
+
+// Custom conflict_target expression:
+// INSERT INTO pilots ("id", "name") VALUES (9, 'Antwerp Design')
+// ON CONFLICT ON CONSTRAINT pilots_pkey DO NOTHING;
+conflictTarget := models.UpsertConflictTarget
+err := p1.Upsert(ctx, db, false, nil, boil.Whitelist("id", "name"), boil.None(), conflictTarget("ON CONSTRAINT pilots_pkey"))
+
+// Custom UPDATE SET expression:
+// INSERT INTO pilots ("id", "name") VALUES (9, 'Antwerp Design')
+// ON CONFLICT ("id") DO UPDATE SET (id, name) = (sub-SELECT)
+updateSet := models.UpsertUpdateSet
+err := p1.Upsert(ctx, db, true, []string{"id"}, boil.Whitelist("id", "name"), boil.None(), updateSet("(id, name) = (sub-SELECT)"))
 ```
 
 * **Postgres**
