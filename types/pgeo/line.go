@@ -22,7 +22,7 @@ func (l Line) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (l *Line) Scan(src interface{}) error {
+func (l *Line) Scan(src any) error {
 	return scanLine(l, src)
 }
 
@@ -30,7 +30,7 @@ func valueLine(l Line) (driver.Value, error) {
 	return fmt.Sprintf(`{%[1]v,%[2]v,%[3]v}`, l.A, l.B, l.C), nil
 }
 
-func scanLine(l *Line, src interface{}) error {
+func scanLine(l *Line, src any) error {
 	if src == nil {
 		*l = NewLine(0, 0, 0)
 		return nil

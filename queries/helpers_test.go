@@ -28,7 +28,7 @@ func TestNonZeroDefaultSet(t *testing.T) {
 
 	tests := []struct {
 		Defaults []string
-		Obj      interface{}
+		Obj      any
 		Ret      []string
 	}{
 		{

@@ -19,9 +19,9 @@ var (
 // BuildQuery builds a query object into the query string
 // and it's accompanying arguments. Using this method
 // allows query building without immediate execution.
-func BuildQuery(q *Query) (string, []interface{}) {
+func BuildQuery(q *Query) (string, []any) {
 	var buf *bytes.Buffer
-	var args []interface{}
+	var args []any
 
 	q.removeSoftDeleteWhere()
 
@@ -46,9 +46,9 @@ func BuildQuery(q *Query) (string, []interface{}) {
 	return bufStr, args
 }
 
-func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
-	var args []interface{}
+	var args []any
 
 	writeComment(q, buf)
 	writeCTEs(q, buf, &args)
@@ -129,7 +129,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 		} else {
 			resp = joinBuf.String()
 		}
-		fmt.Fprintf(buf, resp)
+		fmt.Fprint(buf, resp)
 		strmangle.PutBuffer(joinBuf)
 	}
 
@@ -148,8 +148,8 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
-	var args []interface{}
+func buildDeleteQuery(q *Query) (*bytes.Buffer, []any) {
+	var args []any
 	buf := strmangle.GetBuffer()
 
 	writeComment(q, buf)
@@ -171,9 +171,9 @@ func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func buildUpdateQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
-	var args []interface{}
+	var args []any
 
 	writeComment(q, buf)
 	writeCTEs(q, buf, &args)
@@ -215,10 +215,10 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}, keyword, delim string, clauses []argClause) {
+func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]any, keyword, delim string, clauses []argClause) {
 	argsLen := len(*args)
 	modBuf := strmangle.GetBuffer()
-	fmt.Fprintf(modBuf, keyword)
+	fmt.Fprint(modBuf, keyword)
 
 	for i, j := range clauses {
 		if i > 0 {
@@ -239,7 +239,7 @@ func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]interface{
 	strmangle.PutBuffer(modBuf)
 }
 
-func writeModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}) {
+func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
 	if len(q.groupBy) != 0 {
 		fmt.Fprintf(buf, " GROUP BY %s", strings.Join(q.groupBy, ", "))
 	}
@@ -347,7 +347,7 @@ func writeAsStatements(q *Query) []string {
 // WHERE (a=$1) AND (b=$2) AND (a,b) in (($3, $4), ($5, $6))
 //
 // startAt specifies what number placeholders start at
-func whereClause(q *Query, startAt int) (string, []interface{}) {
+func whereClause(q *Query, startAt int) (string, []any) {
 	if len(q.where) == 0 {
 		return "", nil
 	}
@@ -364,7 +364,7 @@ ManualParen:
 
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
-	var args []interface{}
+	var args []any
 
 	notFirstExpression := false
 	buf.WriteString(" WHERE ")
@@ -617,7 +617,7 @@ func writeComment(q *Query, buf *bytes.Buffer) {
 	}
 }
 
-func writeCTEs(q *Query, buf *bytes.Buffer, args *[]interface{}) {
+func writeCTEs(q *Query, buf *bytes.Buffer, args *[]any) {
 	if len(q.withs) == 0 {
 		return
 	}
@@ -640,6 +640,7 @@ func writeCTEs(q *Query, buf *bytes.Buffer, args *[]interface{}) {
 	} else {
 		resp = withBuf.String()
 	}
-	fmt.Fprintf(buf, resp)
+	fmt.Fprint(buf, resp)
 	strmangle.PutBuffer(withBuf)
 }
+

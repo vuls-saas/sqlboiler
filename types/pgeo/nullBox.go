@@ -20,7 +20,7 @@ func (b NullBox) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (b *NullBox) Scan(src interface{}) error {
+func (b *NullBox) Scan(src any) error {
 	if src == nil {
 		b.Box, b.Valid = NewBox(Point{}, Point{}), false
 		return nil

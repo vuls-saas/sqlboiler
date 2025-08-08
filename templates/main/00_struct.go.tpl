@@ -95,14 +95,14 @@ func (w {{$name}}) NLIKE(x {{.Type}}) qm.QueryMod { return qm.Where(w.field+" NO
 		{{end -}}
 		{{if or (isPrimitive .Type) (isNullPrimitive .Type) (isEnumDBType .DBType) -}}
 func (w {{$name}}) IN(slice []{{convertNullToPrimitive .Type}}) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
+	values := make([]any, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
 func (w {{$name}}) NIN(slice []{{convertNullToPrimitive .Type}}) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
+	values := make([]any, 0, len(slice))
 	for _, value := range slice {
 	  values = append(values, value)
 	}

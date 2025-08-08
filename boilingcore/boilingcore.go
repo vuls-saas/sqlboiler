@@ -12,12 +12,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/friendsofgo/errors"
-	"github.com/aarondl/strmangle"
-
 	"github.com/aarondl/sqlboiler/v4/drivers"
 	"github.com/aarondl/sqlboiler/v4/importers"
 	boiltemplates "github.com/aarondl/sqlboiler/v4/templates"
+	"github.com/aarondl/strmangle"
+	"github.com/friendsofgo/errors"
 )
 
 var (
@@ -409,7 +408,6 @@ func findTemplates(root, base string) (map[string]templateLoader, error) {
 		templates[relative] = fileLoader(path)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +474,6 @@ func (s *State) processTypeReplacements() error {
 	}
 
 	for _, r := range s.Config.TypeReplaces {
-
 		for i := range s.Tables {
 			t := s.Tables[i]
 
@@ -742,7 +739,7 @@ func (s *State) verifyModVersion() error {
 		}
 	}
 	if path == "" {
-		return fmt.Errorf(fmt.Sprintf("could not find go.mod in any parent directory"))
+		return fmt.Errorf("could not find go.mod in any parent directory")
 	}
 
 	gomodbytes, err := os.ReadFile(path)
@@ -752,18 +749,16 @@ func (s *State) verifyModVersion() error {
 
 	re, err := regexp.Compile(`github\.com\/aarondl\/sqlboiler\/v4 v(\d*\.\d*\.\d*)`)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("failed to parse regexp: %v", err))
+		return fmt.Errorf("failed to parse regexp: %v", err)
 	}
 
 	match := re.FindSubmatch(gomodbytes)
 	if len(match) == 0 {
-		return fmt.Errorf(fmt.Sprintf("could not find sqlboiler version in go.mod"))
+		return fmt.Errorf("could not find sqlboiler version in go.mod")
 	}
 	if string(match[1]) != s.Config.Version {
 		return fmt.Errorf(
-			"\tsqlboiler version in go.mod (%s) does not match executable version (%s)."+
-				"\n\tYou can update it with:"+
-				"\n\tgo get github.com/aarondl/sqlboiler/v4",
+			"\tsqlboiler version in go.mod (%s) does not match executable version (%s).\n\tYou can update it with:\n\tgo get github.com/aarondl/sqlboiler/v4",
 			string(match[0]),
 			s.Config.Version,
 		)

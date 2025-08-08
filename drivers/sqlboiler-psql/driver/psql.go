@@ -188,7 +188,7 @@ func (p *PostgresDriver) TableNames(schema string, whitelist, blacklist []string
 	var names []string
 
 	query := `select table_name from information_schema.tables where table_schema = $1 and table_type = 'BASE TABLE'`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -245,7 +245,7 @@ func (p *PostgresDriver) ViewNames(schema string, whitelist, blacklist []string)
 				schemaname as table_schema 
 			from pg_matviews 
 	) as v where v.table_schema= $1`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		views := drivers.TablesFromList(whitelist)
 		if len(views) > 0 {
@@ -400,7 +400,7 @@ func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blackl
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	var columns []drivers.Column
-	args := []interface{}{schema, tableName}
+	args := []any{schema, tableName}
 
 	matviewQuery := `WITH cte_pg_attribute AS (
 		SELECT

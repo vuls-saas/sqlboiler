@@ -133,7 +133,7 @@ func (s SQLiteDriver) Close() {
 // retrieves all table names from sqlite_master
 func (s SQLiteDriver) TableNames(schema string, whitelist, blacklist []string) ([]string, error) {
 	query := `SELECT name FROM sqlite_master WHERE type='table'`
-	args := []interface{}{}
+	args := []any{}
 
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
@@ -180,7 +180,7 @@ func (s SQLiteDriver) TableNames(schema string, whitelist, blacklist []string) (
 // retrieves all view names from sqlite_master
 func (s SQLiteDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
 	query := `SELECT name FROM sqlite_master WHERE type='view'`
-	args := []interface{}{}
+	args := []any{}
 
 	if len(whitelist) > 0 {
 		views := drivers.TablesFromList(whitelist)

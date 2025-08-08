@@ -31,7 +31,7 @@ func DriverMain(driver Interface) {
 		// No input for this method
 	}
 
-	var output interface{}
+	var output any
 	switch method {
 	case "assemble":
 		dinfo, err := driver.Assemble(config)

@@ -12,7 +12,7 @@ import (
 )
 
 // Config is a map with helper functions
-type Config map[string]interface{}
+type Config map[string]any
 
 // MustString retrieves a string that must exist and must be a string, it must also not be the empty string
 func (c Config) MustString(key string) string {
@@ -158,7 +158,7 @@ func (c Config) StringSlice(key string) ([]string, bool) {
 	}
 
 	var slice []string
-	if intfSlice, ok := ss.([]interface{}); ok {
+	if intfSlice, ok := ss.([]any); ok {
 		for _, i := range intfSlice {
 			slice = append(slice, i.(string))
 		}
@@ -186,12 +186,12 @@ func (c Config) MustForeignKeys(key string) []ForeignKey {
 		return nil
 	case []ForeignKey:
 		return v
-	case []interface{}: // in case binary, config is pass to driver in json format, so this key will be []interface{}
+	case []any: // in case binary, config is pass to driver in json format, so this key will be []any
 		fks := make([]ForeignKey, 0, len(v))
 		for _, item := range v {
-			fk, ok := item.(map[string]interface{})
+			fk, ok := item.(map[string]any)
 			if !ok {
-				panic(errors.Errorf("found item of foreign keys, but it was not a map[string]interface{} (%T)", v))
+				panic(errors.Errorf("found item of foreign keys, but it was not a map[string]any (%T)", v))
 			}
 
 			configFK := Config(fk)

@@ -10,12 +10,12 @@ import (
 func TestSetFromInterface(t *testing.T) {
 	t.Parallel()
 
-	setIntf := map[string]interface{}{
-		"standard": []interface{}{
+	setIntf := map[string]any{
+		"standard": []any{
 			"hello",
 			"there",
 		},
-		"third_party": []interface{}{
+		"third_party": []any{
 			"there",
 			"hello",
 		},
@@ -43,13 +43,13 @@ func TestSetFromInterface(t *testing.T) {
 func TestMapFromInterface(t *testing.T) {
 	t.Parallel()
 
-	mapIntf := map[string]interface{}{
-		"test_main": map[string]interface{}{
-			"standard": []interface{}{
+	mapIntf := map[string]any{
+		"test_main": map[string]any{
+			"standard": []any{
 				"hello",
 				"there",
 			},
-			"third_party": []interface{}{
+			"third_party": []any{
 				"there",
 				"hello",
 			},
@@ -83,14 +83,14 @@ func TestMapFromInterface(t *testing.T) {
 func TestMapFromInterfaceAltSyntax(t *testing.T) {
 	t.Parallel()
 
-	mapIntf := []interface{}{
-		map[string]interface{}{
+	mapIntf := []any{
+		map[string]any{
 			"name": "test_main",
-			"standard": []interface{}{
+			"standard": []any{
 				"hello",
 				"there",
 			},
-			"third_party": []interface{}{
+			"third_party": []any{
 				"there",
 				"hello",
 			},

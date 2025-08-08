@@ -20,7 +20,7 @@ func (l NullLine) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (l *NullLine) Scan(src interface{}) error {
+func (l *NullLine) Scan(src any) error {
 	if src == nil {
 		l.Line, l.Valid = NewLine(0, 0, 0), false
 		return nil

@@ -15,7 +15,7 @@ func (l Lseg) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (l *Lseg) Scan(src interface{}) error {
+func (l *Lseg) Scan(src any) error {
 	return scanLseg(l, src)
 }
 
@@ -23,7 +23,7 @@ func valueLseg(l Lseg) (driver.Value, error) {
 	return fmt.Sprintf(`[%s]`, formatPoints(l[:])), nil
 }
 
-func scanLseg(l *Lseg, src interface{}) error {
+func scanLseg(l *Lseg, src any) error {
 	if src == nil {
 		*l = NewLseg(Point{}, Point{})
 		return nil

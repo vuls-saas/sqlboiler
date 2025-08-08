@@ -38,7 +38,7 @@ const (
 // result into the passed in object pointer.
 // It panics on error.
 // Also see documentation for Bind() and Query.Bind()
-func (q *Query) BindP(ctx context.Context, exec boil.Executor, obj interface{}) {
+func (q *Query) BindP(ctx context.Context, exec boil.Executor, obj any) {
 	if err := q.Bind(ctx, exec, obj); err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -48,14 +48,14 @@ func (q *Query) BindP(ctx context.Context, exec boil.Executor, obj interface{}) 
 // the result into the passed in object pointer.
 // It uses the global executor.
 // Also see documentation for Bind() and Query.Bind()
-func (q *Query) BindG(ctx context.Context, obj interface{}) error {
+func (q *Query) BindG(ctx context.Context, obj any) error {
 	return q.Bind(ctx, boil.GetDB(), obj)
 }
 
 // BindGP executes the query and inserts the result into the passed in object pointer.
 // It uses the global executer and panics on error.
 // Also see documentation for Bind() and Query.Bind()
-func (q *Query) BindGP(ctx context.Context, obj interface{}) {
+func (q *Query) BindGP(ctx context.Context, obj any) {
 	q.BindP(ctx, boil.GetDB(), obj)
 }
 
@@ -114,7 +114,7 @@ func (q *Query) BindGP(ctx context.Context, obj interface{}) {
 //
 // For custom objects that want to use eager loading, please see the
 // loadRelationships function.
-func Bind(rows *sql.Rows, obj interface{}) error {
+func Bind(rows *sql.Rows, obj any) error {
 	structType, sliceType, singular, err := bindChecks(obj)
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func Bind(rows *sql.Rows, obj interface{}) error {
 // be using load* methods that support context as the first parameter.
 //
 // Also see documentation for Bind()
-func (q *Query) Bind(ctx context.Context, exec boil.Executor, obj interface{}) error {
+func (q *Query) Bind(ctx context.Context, exec boil.Executor, obj any) error {
 	structType, sliceType, bkind, err := bindChecks(obj)
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (q *Query) Bind(ctx context.Context, exec boil.Executor, obj interface{}) e
 
 // bindChecks resolves information about the bind target, and errors if it's not an object
 // we can bind to.
-func bindChecks(obj interface{}) (structType reflect.Type, sliceType reflect.Type, bkind bindKind, err error) {
+func bindChecks(obj any) (structType reflect.Type, sliceType reflect.Type, bkind bindKind, err error) {
 	typ := reflect.TypeOf(obj)
 	kind := typ.Kind()
 
@@ -223,7 +223,7 @@ func bindChecks(obj interface{}) (structType reflect.Type, sliceType reflect.Typ
 	}
 }
 
-func bind(rows *sql.Rows, obj interface{}, structType, sliceType reflect.Type, bkind bindKind) error {
+func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bindKind) error {
 	cols, err := rows.Columns()
 	if err != nil {
 		return errors.Wrap(err, "bind failed to get column names")
@@ -250,7 +250,7 @@ Rows:
 	for rows.Next() {
 		foundOne = true
 		var newStruct reflect.Value
-		var pointers []interface{}
+		var pointers []any
 
 		switch bkind {
 		case kindStruct:
@@ -336,8 +336,8 @@ ColLoop:
 
 // PtrsFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func PtrsFromMapping(val reflect.Value, mapping []uint64) []interface{} {
-	ptrs := make([]interface{}, len(mapping))
+func PtrsFromMapping(val reflect.Value, mapping []uint64) []any {
+	ptrs := make([]any, len(mapping))
 	for i, m := range mapping {
 		ptrs[i] = ptrFromMapping(val, m, true).Interface()
 	}
@@ -346,8 +346,8 @@ func PtrsFromMapping(val reflect.Value, mapping []uint64) []interface{} {
 
 // ValuesFromMapping expects to be passed an addressable struct and a mapping
 // of where to find things. It pulls the pointers out referred to by the mapping.
-func ValuesFromMapping(val reflect.Value, mapping []uint64) []interface{} {
-	ptrs := make([]interface{}, len(mapping))
+func ValuesFromMapping(val reflect.Value, mapping []uint64) []any {
+	ptrs := make([]any, len(mapping))
 	for i, m := range mapping {
 		ptrs[i] = ptrFromMapping(val, m, false).Interface()
 	}
@@ -358,7 +358,7 @@ func ValuesFromMapping(val reflect.Value, mapping []uint64) []interface{} {
 // for things on.
 func ptrFromMapping(val reflect.Value, mapping uint64, addressOf bool) reflect.Value {
 	if mapping == 0 {
-		var ignored interface{}
+		var ignored any
 		return reflect.ValueOf(&ignored)
 	}
 	for i := 0; i < 8; i++ {
@@ -515,7 +515,7 @@ func (b *mappingCache) mapping(cols []string) ([]uint64, error) {
 //
 // Choosing not to use the DefaultParameterConverter here because sqlboiler doesn't generate
 // pointer columns.
-func Equal(a, b interface{}) bool {
+func Equal(a, b any) bool {
 	if (a == nil && b != nil) || (a != nil && b == nil) {
 		return false
 	}
@@ -577,7 +577,7 @@ func Equal(a, b interface{}) bool {
 }
 
 // isNumeric tests if i is a numeric value.
-func isNumeric(i interface{}) bool {
+func isNumeric(i any) bool {
 	switch i.(type) {
 	case int,
 		int8,
@@ -598,9 +598,9 @@ func isNumeric(i interface{}) bool {
 
 // parseNumeric tries to parse s as t.
 // t must be a numeric type.
-func parseNumeric(s string, t reflect.Type) interface{} {
+func parseNumeric(s string, t reflect.Type) any {
 	var (
-		res interface{}
+		res any
 		err error
 	)
 	switch t.Kind() {
@@ -627,7 +627,7 @@ func parseNumeric(s string, t reflect.Type) interface{} {
 
 // Assign assigns a value to another using reflection.
 // Dst must be a pointer.
-func Assign(dst, src interface{}) {
+func Assign(dst, src any) {
 	// Fast path for []byte since it's one of the
 	// most frequent other "ids" we'll be assigning.
 	if db, ok := dst.(*[]byte); ok {
@@ -676,7 +676,7 @@ func Assign(dst, src interface{}) {
 	}
 }
 
-func upgradeNumericTypes(i interface{}) interface{} {
+func upgradeNumericTypes(i any) any {
 	switch t := i.(type) {
 	case int:
 		return int64(t)
@@ -706,7 +706,7 @@ func upgradeNumericTypes(i interface{}) interface{} {
 // This whole function makes assumptions that whatever type
 // dst is, will be compatible with whatever came out of the Valuer.
 // We handle the types that driver.Value could possibly be.
-func assignValue(dst interface{}, val driver.Value) {
+func assignValue(dst any, val driver.Value) {
 	dstType := reflect.TypeOf(dst).Elem()
 	dstVal := reflect.ValueOf(dst).Elem()
 
@@ -765,7 +765,7 @@ func IsValuerNil(val driver.Valuer) bool {
 
 // IsNil is a more generic version of IsValuerNil, will check to make sure it's
 // not a valuer first.
-func IsNil(val interface{}) bool {
+func IsNil(val any) bool {
 	if val == nil {
 		return true
 	}
