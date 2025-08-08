@@ -23,7 +23,7 @@ func (p Path) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (p *Path) Scan(src interface{}) error {
+func (p *Path) Scan(src any) error {
 	return scanPath(p, src)
 }
 
@@ -37,7 +37,7 @@ func valuePath(p Path) (driver.Value, error) {
 	return val, nil
 }
 
-func scanPath(p *Path, src interface{}) error {
+func scanPath(p *Path, src any) error {
 	if src == nil {
 		return nil
 	}

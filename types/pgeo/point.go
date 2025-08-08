@@ -17,7 +17,7 @@ func (p Point) Value() (driver.Value, error) {
 }
 
 // Scan from query
-func (p *Point) Scan(src interface{}) error {
+func (p *Point) Scan(src any) error {
 	return scanPoint(p, src)
 }
 
@@ -25,7 +25,7 @@ func valuePoint(p Point) (driver.Value, error) {
 	return formatPoint(p), nil
 }
 
-func scanPoint(p *Point, src interface{}) error {
+func scanPoint(p *Point, src any) error {
 	if src == nil {
 		*p = NewPoint(0, 0)
 		return nil

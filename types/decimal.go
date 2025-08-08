@@ -62,7 +62,7 @@ func (d Decimal) Value() (driver.Value, error) {
 }
 
 // Scan implements sql.Scanner.
-func (d *Decimal) Scan(val interface{}) error {
+func (d *Decimal) Scan(val any) error {
 	newD, err := decimalScan(d.Big, val, false)
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (n NullDecimal) Value() (driver.Value, error) {
 }
 
 // Scan implements sql.Scanner.
-func (n *NullDecimal) Scan(val interface{}) error {
+func (n *NullDecimal) Scan(val any) error {
 	newD, err := decimalScan(n.Big, val, true)
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func decimalValue(d *decimal.Big, canNull bool) (driver.Value, error) {
 	return d.String(), nil
 }
 
-func decimalScan(d *decimal.Big, val interface{}, canNull bool) (*decimal.Big, error) {
+func decimalScan(d *decimal.Big, val any, canNull bool) (*decimal.Big, error) {
 	if val == nil {
 		if !canNull {
 			return nil, errors.New("null cannot be scanned into decimal")

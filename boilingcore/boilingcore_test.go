@@ -81,7 +81,7 @@ func testNew(t *testing.T, aliases Aliases) {
 		PkgName:    "models",
 		OutFolder:  out,
 		NoTests:    true,
-		DriverConfig: map[string]interface{}{
+		DriverConfig: map[string]any{
 			drivers.ConfigSchema:    "schema",
 			drivers.ConfigBlacklist: []string{"hangars"},
 		},

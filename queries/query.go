@@ -31,7 +31,7 @@ type Query struct {
 	loadMods map[string]Applicator
 
 	delete     bool
-	update     map[string]interface{}
+	update     map[string]any
 	withs      []argClause
 	selectCols []string
 	count      bool
@@ -74,33 +74,33 @@ type where struct {
 
 	clause      string
 	orSeparator bool
-	args        []interface{}
+	args        []any
 }
 
 type in struct {
 	clause      string
 	orSeparator bool
-	args        []interface{}
+	args        []any
 }
 
 type argClause struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 type rawSQL struct {
 	sql  string
-	args []interface{}
+	args []any
 }
 
 type join struct {
 	kind   joinKind
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Raw makes a raw query, usually for use with bind
-func Raw(query string, args ...interface{}) *Query {
+func Raw(query string, args ...any) *Query {
 	return &Query{
 		rawSQL: rawSQL{
 			sql:  query,
@@ -110,7 +110,7 @@ func Raw(query string, args ...interface{}) *Query {
 }
 
 // RawG makes a raw query using the global boil.Executor, usually for use with bind
-func RawG(query string, args ...interface{}) *Query {
+func RawG(query string, args ...any) *Query {
 	return Raw(query, args...)
 }
 
@@ -287,7 +287,7 @@ func SetDialect(q *Query, dialect *drivers.Dialect) {
 }
 
 // SetSQL on the query.
-func SetSQL(q *Query, sql string, args ...interface{}) {
+func SetSQL(q *Query, sql string, args ...any) {
 	q.rawSQL = rawSQL{sql: sql, args: args}
 }
 
@@ -295,7 +295,7 @@ func SetSQL(q *Query, sql string, args ...interface{}) {
 // query text does not need to be re-generated, useful
 // if you're performing the same query with different arguments
 // over and over.
-func SetArgs(q *Query, args ...interface{}) {
+func SetArgs(q *Query, args ...any) {
 	q.rawSQL.args = args
 }
 
@@ -364,7 +364,7 @@ func SetComment(q *Query, comment string) {
 }
 
 // SetUpdate on the query.
-func SetUpdate(q *Query, cols map[string]interface{}) {
+func SetUpdate(q *Query, cols map[string]any) {
 	q.update = cols
 }
 
@@ -384,42 +384,42 @@ func SetFrom(q *Query, from ...string) {
 }
 
 // AppendInnerJoin on the query.
-func AppendInnerJoin(q *Query, clause string, args ...interface{}) {
+func AppendInnerJoin(q *Query, clause string, args ...any) {
 	q.joins = append(q.joins, join{clause: clause, kind: JoinInner, args: args})
 }
 
 // AppendLeftOuterJoin on the query.
-func AppendLeftOuterJoin(q *Query, clause string, args ...interface{}) {
+func AppendLeftOuterJoin(q *Query, clause string, args ...any) {
 	q.joins = append(q.joins, join{clause: clause, kind: JoinOuterLeft, args: args})
 }
 
 // AppendRightOuterJoin on the query.
-func AppendRightOuterJoin(q *Query, clause string, args ...interface{}) {
+func AppendRightOuterJoin(q *Query, clause string, args ...any) {
 	q.joins = append(q.joins, join{clause: clause, kind: JoinOuterRight, args: args})
 }
 
 // AppendFullOuterJoin on the query.
-func AppendFullOuterJoin(q *Query, clause string, args ...interface{}) {
+func AppendFullOuterJoin(q *Query, clause string, args ...any) {
 	q.joins = append(q.joins, join{clause: clause, kind: JoinOuterFull, args: args})
 }
 
 // AppendHaving on the query.
-func AppendHaving(q *Query, clause string, args ...interface{}) {
+func AppendHaving(q *Query, clause string, args ...any) {
 	q.having = append(q.having, argClause{clause: clause, args: args})
 }
 
 // AppendWhere on the query.
-func AppendWhere(q *Query, clause string, args ...interface{}) {
+func AppendWhere(q *Query, clause string, args ...any) {
 	q.where = append(q.where, where{clause: clause, args: args})
 }
 
 // AppendIn on the query.
-func AppendIn(q *Query, clause string, args ...interface{}) {
+func AppendIn(q *Query, clause string, args ...any) {
 	q.where = append(q.where, where{kind: whereKindIn, clause: clause, args: args})
 }
 
 // AppendNotIn on the query.
-func AppendNotIn(q *Query, clause string, args ...interface{}) {
+func AppendNotIn(q *Query, clause string, args ...any) {
 	q.where = append(q.where, where{kind: whereKindNotIn, clause: clause, args: args})
 }
 
@@ -475,12 +475,12 @@ func AppendGroupBy(q *Query, clause string) {
 }
 
 // AppendOrderBy on the query.
-func AppendOrderBy(q *Query, clause string, args ...interface{}) {
+func AppendOrderBy(q *Query, clause string, args ...any) {
 	q.orderBy = append(q.orderBy, argClause{clause: clause, args: args})
 }
 
 // AppendWith on the query.
-func AppendWith(q *Query, clause string, args ...interface{}) {
+func AppendWith(q *Query, clause string, args ...any) {
 	q.withs = append(q.withs, argClause{clause: clause, args: args})
 }
 

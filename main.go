@@ -215,7 +215,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Configure the driver
-	cmdConfig.DriverConfig = map[string]interface{}{
+	cmdConfig.DriverConfig = map[string]any{
 		"whitelist":                  viper.GetStringSlice(driverName + ".whitelist"),
 		"blacklist":                  viper.GetStringSlice(driverName + ".blacklist"),
 		drivers.ConfigNoOutputSchema: viper.GetBool("no-schema"),

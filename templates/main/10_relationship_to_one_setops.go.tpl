@@ -70,7 +70,7 @@ func (o *{{$ltable.UpSingular}}) Set{{$rel.Foreign}}({{if $.NoContext}}exec boil
 		strmangle.SetParamNames("{{$.LQ}}", "{{$.RQ}}", {{if $.Dialect.UseIndexPlaceholders}}1{{else}}0{{end}}, []string{{"{"}}"{{.Column}}"{{"}"}}),
 		strmangle.WhereClause("{{$.LQ}}", "{{$.RQ}}", {{if $.Dialect.UseIndexPlaceholders}}2{{else}}0{{end}}, {{$ltable.DownSingular}}PrimaryKeyColumns),
 	)
-	values := []interface{}{related.{{$fcol}}, o.{{$.Table.PKey.Columns | stringMap (aliasCols $ltable) | join ", o."}}{{"}"}}
+	values := []any{related.{{$fcol}}, o.{{$.Table.PKey.Columns | stringMap (aliasCols $ltable) | join ", o."}}{{"}"}}
 
 	{{if $.NoContext -}}
 	if boil.DebugMode {

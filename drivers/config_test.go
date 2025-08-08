@@ -10,30 +10,30 @@ func TestConfigMustString(t *testing.T) {
 
 	key := "string"
 	tests := []struct {
-		Config map[string]interface{}
+		Config map[string]any
 		Value  string
 	}{
 		{
-			Config: map[string]interface{}{key: "str"},
+			Config: map[string]any{key: "str"},
 			Value:  "str",
 		},
 		{
-			Config: map[string]interface{}{key: ""},
+			Config: map[string]any{key: ""},
 			Value:  "",
 		},
 		{
-			Config: map[string]interface{}{key: 5},
+			Config: map[string]any{key: 5},
 			Value:  "",
 		},
 		{
-			Config: map[string]interface{}{},
+			Config: map[string]any{},
 			Value:  "",
 		},
 	}
 
 	for i, test := range tests {
 		var value string
-		var paniced interface{}
+		var paniced any
 
 		func() {
 			defer func() {
@@ -63,30 +63,30 @@ func TestConfigMustInt(t *testing.T) {
 
 	key := "integer"
 	tests := []struct {
-		Config map[string]interface{}
+		Config map[string]any
 		Value  int
 	}{
 		{
-			Config: map[string]interface{}{key: 5},
+			Config: map[string]any{key: 5},
 			Value:  5,
 		},
 		{
-			Config: map[string]interface{}{key: 5.0},
+			Config: map[string]any{key: 5.0},
 			Value:  5,
 		},
 		{
-			Config: map[string]interface{}{key: 0},
+			Config: map[string]any{key: 0},
 			Value:  0,
 		},
 		{
-			Config: map[string]interface{}{},
+			Config: map[string]any{},
 			Value:  0,
 		},
 	}
 
 	for i, test := range tests {
 		var value int
-		var paniced interface{}
+		var paniced any
 
 		func() {
 			defer func() {
@@ -116,27 +116,27 @@ func TestConfigString(t *testing.T) {
 
 	key := "string"
 	tests := []struct {
-		Config map[string]interface{}
+		Config map[string]any
 		Value  string
 		Ok     bool
 	}{
 		{
-			Config: map[string]interface{}{key: "str"},
+			Config: map[string]any{key: "str"},
 			Value:  "str",
 			Ok:     true,
 		},
 		{
-			Config: map[string]interface{}{key: ""},
+			Config: map[string]any{key: ""},
 			Value:  "",
 			Ok:     false,
 		},
 		{
-			Config: map[string]interface{}{key: 5},
+			Config: map[string]any{key: 5},
 			Value:  "",
 			Ok:     false,
 		},
 		{
-			Config: map[string]interface{}{},
+			Config: map[string]any{},
 			Value:  "",
 			Ok:     false,
 		},
@@ -159,27 +159,27 @@ func TestConfigInt(t *testing.T) {
 
 	key := "integer"
 	tests := []struct {
-		Config map[string]interface{}
+		Config map[string]any
 		Value  int
 		Ok     bool
 	}{
 		{
-			Config: map[string]interface{}{key: 5},
+			Config: map[string]any{key: 5},
 			Value:  5,
 			Ok:     true,
 		},
 		{
-			Config: map[string]interface{}{key: 5.0},
+			Config: map[string]any{key: 5.0},
 			Value:  5,
 			Ok:     true,
 		},
 		{
-			Config: map[string]interface{}{key: 0},
+			Config: map[string]any{key: 0},
 			Value:  0,
 			Ok:     false,
 		},
 		{
-			Config: map[string]interface{}{},
+			Config: map[string]any{},
 			Value:  0,
 			Ok:     false,
 		},
@@ -202,32 +202,32 @@ func TestConfigStringSlice(t *testing.T) {
 
 	key := "slice"
 	tests := []struct {
-		Config map[string]interface{}
+		Config map[string]any
 		Value  []string
 		Ok     bool
 	}{
 		{
-			Config: map[string]interface{}{key: []string{"str"}},
+			Config: map[string]any{key: []string{"str"}},
 			Value:  []string{"str"},
 			Ok:     true,
 		},
 		{
-			Config: map[string]interface{}{key: []interface{}{"str"}},
+			Config: map[string]any{key: []any{"str"}},
 			Value:  []string{"str"},
 			Ok:     true,
 		},
 		{
-			Config: map[string]interface{}{key: []string{}},
+			Config: map[string]any{key: []string{}},
 			Value:  nil,
 			Ok:     false,
 		},
 		{
-			Config: map[string]interface{}{key: 5},
+			Config: map[string]any{key: 5},
 			Value:  nil,
 			Ok:     false,
 		},
 		{
-			Config: map[string]interface{}{},
+			Config: map[string]any{},
 			Value:  nil,
 			Ok:     false,
 		},
@@ -328,10 +328,10 @@ func TestConfig_MustForeignKeys(t *testing.T) {
 			panic: true,
 		},
 		{
-			name: "foreign keys in []interface{} format",
+			name: "foreign keys in []any format",
 			c: Config{
-				"foreign-keys": []interface{}{
-					map[string]interface{}{
+				"foreign-keys": []any{
+					map[string]any{
 						"name":           "test_fk",
 						"table":          "table_name",
 						"column":         "column_name",
@@ -352,9 +352,9 @@ func TestConfig_MustForeignKeys(t *testing.T) {
 			panic: false,
 		},
 		{
-			name: "invalid foreign keys in []interface{} format",
+			name: "invalid foreign keys in []any format",
 			c: Config{
-				"foreign-keys": []interface{}{
+				"foreign-keys": []any{
 					"123",
 				},
 			},
@@ -363,8 +363,8 @@ func TestConfig_MustForeignKeys(t *testing.T) {
 		{
 			name: "foreign keys in []map[string]string format but missing fields",
 			c: Config{
-				"foreign-keys": []interface{}{
-					map[string]interface{}{
+				"foreign-keys": []any{
+					map[string]any{
 						"name": "test_fk",
 					},
 				},
@@ -376,7 +376,7 @@ func TestConfig_MustForeignKeys(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got []ForeignKey
-			var paniced interface{}
+			var paniced any
 			func() {
 				defer func() {
 					if r := recover(); r != nil {

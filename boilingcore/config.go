@@ -144,7 +144,7 @@ func (c *Config) OutputDirDepth() int {
 //	  name    = "fkey_name"
 //	  local   = "x"
 //	  foreign = "y"
-func ConvertAliases(i interface{}) (a Aliases) {
+func ConvertAliases(i any) (a Aliases) {
 	if i == nil {
 		return a
 	}
@@ -153,7 +153,7 @@ func ConvertAliases(i interface{}) (a Aliases) {
 
 	tablesIntf := topLevel["tables"]
 
-	iterateMapOrSlice(tablesIntf, func(name string, tIntf interface{}) {
+	iterateMapOrSlice(tablesIntf, func(name string, tIntf any) {
 		if a.Tables == nil {
 			a.Tables = make(map[string]TableAlias)
 		}
@@ -178,10 +178,10 @@ func ConvertAliases(i interface{}) (a Aliases) {
 		if colsIntf, ok := t["columns"]; ok {
 			ta.Columns = make(map[string]string)
 
-			iterateMapOrSlice(colsIntf, func(name string, colIntf interface{}) {
+			iterateMapOrSlice(colsIntf, func(name string, colIntf any) {
 				var alias string
 				switch col := colIntf.(type) {
-				case map[string]interface{}, map[interface{}]interface{}:
+				case map[string]any, map[any]any:
 					cmap := cast.ToStringMap(colIntf)
 					alias = cmap["alias"].(string)
 				case string:
@@ -193,7 +193,7 @@ func ConvertAliases(i interface{}) (a Aliases) {
 
 		relationshipsIntf, ok := t["relationships"]
 		if ok {
-			iterateMapOrSlice(relationshipsIntf, func(name string, rIntf interface{}) {
+			iterateMapOrSlice(relationshipsIntf, func(name string, rIntf any) {
 				if ta.Relationships == nil {
 					ta.Relationships = make(map[string]RelationshipAlias)
 				}
@@ -218,14 +218,14 @@ func ConvertAliases(i interface{}) (a Aliases) {
 	return a
 }
 
-func iterateMapOrSlice(mapOrSlice interface{}, fn func(name string, obj interface{})) {
+func iterateMapOrSlice(mapOrSlice any, fn func(name string, obj any)) {
 	switch t := mapOrSlice.(type) {
-	case map[string]interface{}, map[interface{}]interface{}:
+	case map[string]any, map[any]any:
 		tmap := cast.ToStringMap(mapOrSlice)
 		for name, table := range tmap {
 			fn(name, table)
 		}
-	case []interface{}:
+	case []any:
 		for _, intf := range t {
 			obj := cast.ToStringMap(intf)
 			name := obj["name"].(string)
@@ -235,12 +235,12 @@ func iterateMapOrSlice(mapOrSlice interface{}, fn func(name string, obj interfac
 }
 
 // ConvertTypeReplace is necessary because viper
-func ConvertTypeReplace(i interface{}) []TypeReplace {
+func ConvertTypeReplace(i any) []TypeReplace {
 	if i == nil {
 		return nil
 	}
 
-	intfArray := i.([]interface{})
+	intfArray := i.([]any)
 	var replaces []TypeReplace
 	for _, r := range intfArray {
 		replaceIntf := cast.ToStringMap(r)
@@ -270,7 +270,7 @@ func ConvertTypeReplace(i interface{}) []TypeReplace {
 	return replaces
 }
 
-func tablesOfTypeReplace(i interface{}) []string {
+func tablesOfTypeReplace(i any) []string {
 	tables := []string{}
 
 	m := cast.ToStringMap(i)
@@ -281,7 +281,7 @@ func tablesOfTypeReplace(i interface{}) []string {
 	return tables
 }
 
-func columnFromInterface(i interface{}) (col drivers.Column) {
+func columnFromInterface(i any) (col drivers.Column) {
 	m := cast.ToStringMap(i)
 	if s := m["name"]; s != nil {
 		col.Name = s.(string)
@@ -335,12 +335,12 @@ func columnFromInterface(i interface{}) (col drivers.Column) {
 //	column = "column_name"
 //	foreign_table = "foreign_table_name"
 //	foreign_column = "foreign_column_name"
-func ConvertForeignKeys(i interface{}) (fks []drivers.ForeignKey) {
+func ConvertForeignKeys(i any) (fks []drivers.ForeignKey) {
 	if i == nil {
 		return nil
 	}
 
-	iterateMapOrSlice(i, func(name string, obj interface{}) {
+	iterateMapOrSlice(i, func(name string, obj any) {
 		t := cast.ToStringMap(obj)
 
 		fk := drivers.ForeignKey{

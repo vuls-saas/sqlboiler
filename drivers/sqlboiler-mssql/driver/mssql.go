@@ -157,7 +157,7 @@ func (m *MSSQLDriver) TableNames(schema string, whitelist, blacklist []string) (
 		FROM   information_schema.tables
 		WHERE  table_schema = ? AND table_type = 'BASE TABLE'`
 
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -203,7 +203,7 @@ func (m *MSSQLDriver) ViewNames(schema string, whitelist, blacklist []string) ([
 	var names []string
 
 	query := `select table_name from information_schema.views where table_schema = ?`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -265,7 +265,7 @@ func (m *MSSQLDriver) ViewColumns(schema, tableName string, whitelist, blacklist
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (m *MSSQLDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	var columns []drivers.Column
-	args := []interface{}{schema, tableName}
+	args := []any{schema, tableName}
 	query := `
 	SELECT column_name,
        CASE

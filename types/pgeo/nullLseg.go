@@ -20,7 +20,7 @@ func (l NullLseg) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (l *NullLseg) Scan(src interface{}) error {
+func (l *NullLseg) Scan(src any) error {
 	if src == nil {
 		l.Lseg, l.Valid = NewLseg(Point{}, Point{}), false
 		return nil

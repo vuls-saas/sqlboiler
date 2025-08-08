@@ -20,7 +20,7 @@ func (c Circle) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (c *Circle) Scan(src interface{}) error {
+func (c *Circle) Scan(src any) error {
 	return scanCircle(c, src)
 }
 
@@ -28,7 +28,7 @@ func valueCircle(c Circle) (driver.Value, error) {
 	return fmt.Sprintf(`<%s,%v>`, formatPoint(c.Point), c.Radius), nil
 }
 
-func scanCircle(c *Circle, src interface{}) error {
+func scanCircle(c *Circle, src any) error {
 	if src == nil {
 		*c = NewCircle(Point{}, 0)
 		return nil

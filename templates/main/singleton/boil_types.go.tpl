@@ -1,5 +1,5 @@
 // M type is for providing columns and column values to UpdateAll.
-type M map[string]interface{}
+type M map[string]any
 
 // ErrSyncFail occurs during insert when the record could not be retrieved in
 // order to populate default value information. This usually happens when LastInsertId
@@ -257,7 +257,7 @@ It only titlecases the EnumValue portion if it's snake-cased.
 						}
 
 						// Scan implements the Scanner interface.
-						func (e *{{$enumType}}) Scan(value interface{}) error {
+						func (e *{{$enumType}}) Scan(value any) error {
 							if value == nil {
 								e.Val, e.Valid = "", false
 								return nil

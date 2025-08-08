@@ -7,7 +7,7 @@ import (
 
 // NonZeroDefaultSet returns the fields included in the
 // defaults slice that are non zero values
-func NonZeroDefaultSet(defaults []string, obj interface{}) []string {
+func NonZeroDefaultSet(defaults []string, obj any) []string {
 	c := make([]string, 0, len(defaults))
 
 	val := reflect.Indirect(reflect.ValueOf(obj))

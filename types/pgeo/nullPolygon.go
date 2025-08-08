@@ -20,7 +20,7 @@ func (p NullPolygon) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (p *NullPolygon) Scan(src interface{}) error {
+func (p *NullPolygon) Scan(src any) error {
 	if src == nil {
 		p.Polygon, p.Valid = NewPolygon([]Point{Point{}, Point{}, Point{}, Point{}}), false
 		return nil

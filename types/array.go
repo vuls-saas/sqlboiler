@@ -48,11 +48,11 @@ type parameterStatus struct {
 	currentLocation *time.Location
 }
 
-func errorf(s string, args ...interface{}) {
+func errorf(s string, args ...any) {
 	panic(fmt.Errorf("pq: %s", fmt.Sprintf(s, args...)))
 }
 
-func encode(parameterStatus *parameterStatus, x interface{}, pgtypOid oid.Oid) []byte {
+func encode(parameterStatus *parameterStatus, x any, pgtypOid oid.Oid) []byte {
 	switch v := x.(type) {
 	case int64:
 		return strconv.AppendInt(nil, v, 10)
@@ -274,7 +274,7 @@ func disableInfinityTs() {
 // setting ("ISO, MDY"), the only one we currently support. This
 // accounts for the discrepancies between the parsing available with
 // time.Parse and the Postgres date formatting quirks.
-func parseTs(currentLocation *time.Location, str string) interface{} {
+func parseTs(currentLocation *time.Location, str string) any {
 	switch str {
 	case "-infinity":
 		if infinityTsEnabled {
@@ -459,7 +459,7 @@ var typeSQLScanner = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 //
 // Scanning multi-dimensional arrays is not supported.  Arrays where the lower
 // bound is not one (such as `[0:0]={1}') are not supported.
-func Array(a interface{}) interface {
+func Array(a any) interface {
 	driver.Valuer
 	sql.Scanner
 } {
@@ -497,7 +497,7 @@ type ArrayDelimiter interface {
 type BoolArray []bool
 
 // Scan implements the sql.Scanner interface.
-func (a *BoolArray) Scan(src interface{}) error {
+func (a *BoolArray) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -576,7 +576,7 @@ func (a *BoolArray) Randomize(nextInt func() int64, fieldType string, shouldBeNu
 type BytesArray [][]byte
 
 // Scan implements the sql.Scanner interface.
-func (a *BytesArray) Scan(src interface{}) error {
+func (a *BytesArray) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -653,7 +653,7 @@ func (a *BytesArray) Randomize(nextInt func() int64, fieldType string, shouldBeN
 type Float64Array []float64
 
 // Scan implements the sql.Scanner interface.
-func (a *Float64Array) Scan(src interface{}) error {
+func (a *Float64Array) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -717,7 +717,7 @@ func (a *Float64Array) Randomize(nextInt func() int64, fieldType string, shouldB
 
 // GenericArray implements the driver.Valuer and sql.Scanner interfaces for
 // an array or slice of any dimension.
-type GenericArray struct{ A interface{} }
+type GenericArray struct{ A any }
 
 func (GenericArray) evaluateDestination(rt reflect.Type) (reflect.Type, func([]byte, reflect.Value) error, string) {
 	var assign func([]byte, reflect.Value) error
@@ -755,7 +755,7 @@ FoundType:
 }
 
 // Scan implements the sql.Scanner interface.
-func (a GenericArray) Scan(src interface{}) error {
+func (a GenericArray) Scan(src any) error {
 	dpv := reflect.ValueOf(a.A)
 	switch {
 	case dpv.Kind() != reflect.Ptr:
@@ -874,7 +874,7 @@ func (a GenericArray) Value() (driver.Value, error) {
 type Int64Array []int64
 
 // Scan implements the sql.Scanner interface.
-func (a *Int64Array) Scan(src interface{}) error {
+func (a *Int64Array) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -940,7 +940,7 @@ func (a *Int64Array) Randomize(nextInt func() int64, fieldType string, shouldBeN
 type StringArray []string
 
 // Scan implements the sql.Scanner interface.
-func (a *StringArray) Scan(src interface{}) error {
+func (a *StringArray) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -1019,7 +1019,7 @@ func (a *StringArray) Randomize(nextInt func() int64, fieldType string, shouldBe
 type DecimalArray []Decimal
 
 // Scan implements the sql.Scanner interface.
-func (a *DecimalArray) Scan(src interface{}) error {
+func (a *DecimalArray) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		return a.scanBytes(src)
@@ -1123,7 +1123,7 @@ func appendArrayElement(b []byte, rv reflect.Value) ([]byte, string, error) {
 
 	var del = ","
 	var err error
-	var iv interface{} = rv.Interface()
+	var iv any = rv.Interface()
 
 	if ad, ok := iv.(ArrayDelimiter); ok {
 		del = ad.ArrayDelimiter()

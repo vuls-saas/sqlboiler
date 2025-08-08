@@ -20,7 +20,7 @@ func (c NullCircle) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (c *NullCircle) Scan(src interface{}) error {
+func (c *NullCircle) Scan(src any) error {
 	if src == nil {
 		c.Circle, c.Valid = NewCircle(Point{}, 0), false
 		return nil
