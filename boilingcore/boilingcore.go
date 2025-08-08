@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -74,9 +76,7 @@ func New(config *Config) (*State, error) {
 	}()
 
 	if len(s.Config.Version) > 0 {
-		noEditDisclaimer = []byte(
-			fmt.Sprintf(noEditDisclaimerFmt, " "+s.Config.Version+" "),
-		)
+		noEditDisclaimer = fmt.Appendf(nil, noEditDisclaimerFmt, " "+s.Config.Version+" ")
 	}
 
 	if err := s.verifyModVersion(); err != nil {
@@ -258,7 +258,7 @@ func (s *State) initTemplates() ([]lazyTemplate, error) {
 				return nil, err
 			}
 
-			mergeTemplates(templates, tpls)
+			maps.Copy(templates, tpls)
 		}
 	} else {
 		defaultTemplates := s.Config.DefaultTemplates
@@ -594,13 +594,7 @@ func shouldReplaceInTable(t drivers.Table, r TypeReplace) bool {
 		return true
 	}
 
-	for _, replaceInTable := range r.Tables {
-		if replaceInTable == t.Name {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(r.Tables, t.Name)
 }
 
 // initOutFolders creates the folders that will hold the generated output.
@@ -701,12 +695,6 @@ func checkPKeys(tables []drivers.Table) error {
 	return nil
 }
 
-func mergeTemplates(dst, src map[string]templateLoader) {
-	for k, v := range src {
-		dst[k] = v
-	}
-}
-
 // normalizeSlashes takes a path that was made on linux or windows and converts it
 // to a native path.
 func normalizeSlashes(path string) string {
@@ -744,12 +732,12 @@ func (s *State) verifyModVersion() error {
 
 	gomodbytes, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("could not read go.mod: %v", err))
+		return fmt.Errorf("could not read go.mod: %w", err)
 	}
 
 	re, err := regexp.Compile(`github\.com\/aarondl\/sqlboiler\/v4 v(\d*\.\d*\.\d*)`)
 	if err != nil {
-		return fmt.Errorf("failed to parse regexp: %v", err)
+		return fmt.Errorf("failed to parse regexp: %w", err)
 	}
 
 	match := re.FindSubmatch(gomodbytes)

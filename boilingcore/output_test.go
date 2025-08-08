@@ -19,10 +19,6 @@ func (NopWriteCloser) Close() error {
 	return nil
 }
 
-func nopCloser(w io.Writer) io.WriteCloser {
-	return NopWriteCloser{w}
-}
-
 func TestWriteFile(t *testing.T) {
 	// t.Parallel() cannot be used
 
