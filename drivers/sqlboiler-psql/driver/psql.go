@@ -15,8 +15,8 @@ import (
 
 	"github.com/aarondl/sqlboiler/v4/importers"
 
-	"github.com/aarondl/strmangle"
 	"github.com/friendsofgo/errors"
+	"github.com/aarondl/strmangle"
 
 	"github.com/aarondl/sqlboiler/v4/drivers"
 
@@ -390,10 +390,7 @@ select * from results;
 	return nil
 }
 
-func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) (
-	[]drivers.Column,
-	error,
-) {
+func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	return p.Columns(schema, tableName, whitelist, blacklist)
 }
 
@@ -604,7 +601,7 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 			}
 		}
 	}
-
+	
 	if len(blacklist) > 0 {
 		cols := drivers.ColumnsFromList(blacklist, tableName)
 		if len(cols) > 0 {
