@@ -115,12 +115,12 @@ func (q *Query) BindGP(ctx context.Context, obj any) {
 // For custom objects that want to use eager loading, please see the
 // loadRelationships function.
 func Bind(rows *sql.Rows, obj any) error {
-	structType, sliceType, singular, err := bindChecks(obj)
+	structType, _, singular, err := bindChecks(obj)
 	if err != nil {
 		return err
 	}
 
-	return bind(rows, obj, structType, sliceType, singular)
+	return bind(rows, obj, structType, singular)
 }
 
 // Bind executes the query and inserts the
@@ -133,7 +133,7 @@ func Bind(rows *sql.Rows, obj any) error {
 //
 // Also see documentation for Bind()
 func (q *Query) Bind(ctx context.Context, exec boil.Executor, obj any) error {
-	structType, sliceType, bkind, err := bindChecks(obj)
+	structType, _, bkind, err := bindChecks(obj)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (q *Query) Bind(ctx context.Context, exec boil.Executor, obj any) error {
 	if err != nil {
 		return errors.Wrap(err, "bind failed to execute query")
 	}
-	if err = bind(rows, obj, structType, sliceType, bkind); err != nil {
+	if err = bind(rows, obj, structType, bkind); err != nil {
 		if innerErr := rows.Close(); innerErr != nil {
 			return errors.Wrapf(err, "error on rows.Close after bind error: %+v", innerErr)
 		}
@@ -223,7 +223,7 @@ func bindChecks(obj any) (structType reflect.Type, sliceType reflect.Type, bkind
 	}
 }
 
-func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bindKind) error {
+func bind(rows *sql.Rows, obj any, structType reflect.Type, bkind bindKind) error {
 	cols, err := rows.Columns()
 	if err != nil {
 		return errors.Wrap(err, "bind failed to get column names")
@@ -240,11 +240,6 @@ func bind(rows *sql.Rows, obj any, structType, sliceType reflect.Type, bkind bin
 		return err
 	}
 
-	var oneStruct reflect.Value
-	if bkind == kindSliceStruct {
-		oneStruct = reflect.Indirect(reflect.New(structType))
-	}
-
 	foundOne := false
 Rows:
 	for rows.Next() {
@@ -256,13 +251,11 @@ Rows:
 		case kindStruct:
 			pointers = PtrsFromMapping(reflect.Indirect(reflect.ValueOf(obj)), mapping)
 		case kindSliceStruct:
-			pointers = PtrsFromMapping(oneStruct, mapping)
+			newStruct = reflect.Indirect(reflect.New(structType))
+			pointers = PtrsFromMapping(newStruct, mapping)
 		case kindPtrSliceStruct:
 			newStruct = makeStructPtr(structType)
 			pointers = PtrsFromMapping(reflect.Indirect(newStruct), mapping)
-		}
-		if err != nil {
-			return err
 		}
 
 		if err := rows.Scan(pointers...); err != nil {
@@ -272,9 +265,7 @@ Rows:
 		switch bkind {
 		case kindStruct:
 			break Rows
-		case kindSliceStruct:
-			ptrSlice.Set(reflect.Append(ptrSlice, oneStruct))
-		case kindPtrSliceStruct:
+		case kindSliceStruct, kindPtrSliceStruct:
 			ptrSlice.Set(reflect.Append(ptrSlice, newStruct))
 		}
 	}
