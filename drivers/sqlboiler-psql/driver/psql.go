@@ -1036,9 +1036,7 @@ func (p PostgresDriver) Imports() (importers.Collection, error) {
 	var col importers.Collection
 
 	col.All = importers.Set{
-		Standard: importers.List{
-			`"strconv"`,
-		},
+		Standard: importers.List{},
 	}
 	col.Singleton = importers.Map{
 		"psql_upsert": {
@@ -1232,4 +1230,67 @@ func (p *PostgresDriver) getVersion() (int, error) {
 	}
 
 	return versionInfo.ServerVersionNum, nil
+}
+
+// HasPartialIndex checks if a table has any partial indexes
+func (p *PostgresDriver) HasPartialIndex(schema, tableName string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM pg_indexes
+			WHERE schemaname = $1
+			AND tablename = $2
+			AND indexdef LIKE '%WHERE%'
+		)`
+	
+	var hasPartial bool
+	err := p.conn.QueryRow(query, schema, tableName).Scan(&hasPartial)
+	if err != nil {
+		return false, err
+	}
+	
+	return hasPartial, nil
+}
+
+// GetPartialIndexes retrieves all partial unique indexes for a table
+func (p *PostgresDriver) GetPartialIndexes(schema, tableName string) ([]drivers.PartialIndex, error) {
+	query := `
+		SELECT 
+			pi.indexname,
+			string_agg(a.attname, ',' ORDER BY array_position(i.indkey, a.attnum)),
+			regexp_replace(pi.indexdef, '^.*WHERE\s+', '') as where_clause,
+			i.indisunique
+		FROM pg_indexes pi
+		JOIN pg_class c ON c.relname = pi.tablename
+		JOIN pg_namespace n ON n.nspname = pi.schemaname AND c.relnamespace = n.oid
+		JOIN pg_class ic ON ic.relname = pi.indexname
+		JOIN pg_index i ON i.indexrelid = ic.oid
+		JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = ANY(i.indkey)
+		WHERE pi.schemaname = $1
+		AND pi.tablename = $2
+		AND pi.indexdef LIKE '%WHERE%'
+		GROUP BY pi.indexname, pi.indexdef, i.indisunique
+		ORDER BY pi.indexname`
+	
+	rows, err := p.conn.Query(query, schema, tableName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var indexes []drivers.PartialIndex
+	for rows.Next() {
+		var idx drivers.PartialIndex
+		var columnsStr string
+		
+		err := rows.Scan(&idx.Name, &columnsStr, &idx.WhereClause, &idx.IsUnique)
+		if err != nil {
+			return nil, err
+		}
+		
+		idx.Columns = strings.Split(columnsStr, ",")
+		indexes = append(indexes, idx)
+	}
+	
+	return indexes, rows.Err()
 }

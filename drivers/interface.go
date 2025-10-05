@@ -111,6 +111,12 @@ type TableColumnTypeTranslator interface {
 	TranslateTableColumnType(c Column, tableName string) Column
 }
 
+// PartialIndexDetector is an optional interface for drivers that can detect partial indexes
+type PartialIndexDetector interface {
+	HasPartialIndex(schema, tableName string) (bool, error)
+	GetPartialIndexes(schema, tableName string) ([]PartialIndex, error)
+}
+
 // Tables returns the metadata for all tables, minus the tables
 // specified in the blacklist.
 func Tables(c Constructor, schema string, whitelist, blacklist []string) ([]Table, error) {
@@ -183,6 +189,14 @@ func tables(c Constructor, schema string, whitelist, blacklist []string, concurr
 			filterForeignKeys(&t, whitelist, blacklist)
 			setIsJoinTable(&t)
 
+			// Check for partial indexes if the driver supports it
+			if pid, ok := c.(PartialIndexDetector); ok {
+				t.HasPartialIndex, _ = pid.HasPartialIndex(schema, name)
+				if t.HasPartialIndex {
+					t.PartialIndexes, _ = pid.GetPartialIndexes(schema, name)
+				}
+			}
+
 			ret[i] = t
 		}(i, name)
 	}
@@ -241,6 +255,14 @@ func table(c Constructor, schema string, name string, whitelist, blacklist []str
 	filterForeignKeys(t, whitelist, blacklist)
 
 	setIsJoinTable(t)
+
+	// Check for partial indexes if the driver supports it
+	if pid, ok := c.(PartialIndexDetector); ok {
+		t.HasPartialIndex, _ = pid.HasPartialIndex(schema, name)
+		if t.HasPartialIndex {
+			t.PartialIndexes, _ = pid.GetPartialIndexes(schema, name)
+		}
+	}
 
 	return *t, nil
 }

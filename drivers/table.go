@@ -24,6 +24,12 @@ type Table struct {
 	// For views
 	IsView           bool             `json:"is_view"`
 	ViewCapabilities ViewCapabilities `json:"view_capabilities"`
+
+	// HasPartialIndex indicates if the table has any partial indexes defined
+	HasPartialIndex bool `json:"has_partial_index"`
+	
+	// PartialIndexes contains all partial unique indexes for this table
+	PartialIndexes []PartialIndex `json:"partial_indexes"`
 }
 
 type ViewCapabilities struct {
