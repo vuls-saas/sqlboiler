@@ -24,8 +24,8 @@ import (
 	"database/sql/driver"
 	"strings"
 
-	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/randomize"
+	"github.com/aarondl/null/v8"
+	"github.com/aarondl/randomize"
 )
 
 // HStore is a wrapper for transferring HStore values back and forth easily.
@@ -33,7 +33,7 @@ type HStore map[string]null.String
 
 // escapes and quotes hstore keys/values
 // s should be a sql.NullString or string
-func hQuote(s interface{}) string {
+func hQuote(s any) string {
 	var str string
 	switch v := s.(type) {
 	case null.String:
@@ -60,7 +60,7 @@ func hQuote(s interface{}) string {
 //
 // Note h is reallocated before the scan to clear existing values. If the
 // hstore column's database value is NULL, then h is set to nil instead.
-func (h *HStore) Scan(value interface{}) error {
+func (h *HStore) Scan(value any) error {
 	if value == nil {
 		h = nil
 		return nil

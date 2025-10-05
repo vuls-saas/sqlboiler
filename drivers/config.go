@@ -12,7 +12,7 @@ import (
 )
 
 // Config is a map with helper functions
-type Config map[string]interface{}
+type Config map[string]any
 
 // MustString retrieves a string that must exist and must be a string, it must also not be the empty string
 func (c Config) MustString(key string) string {
@@ -93,6 +93,21 @@ func (c Config) DefaultString(key, def string) string {
 	return str
 }
 
+// DefaultBool retrieves a non-empty bool or the default value provided.
+func (c Config) DefaultBool(key string, def bool) bool {
+	b, ok := c[key]
+	if !ok {
+		return def
+	}
+
+	bul, ok := b.(bool)
+	if !ok {
+		return def
+	}
+
+	return bul
+}
+
 // Int retrieves an int, the bool says if it exists, is of the appropriate type,
 // and is non-zero. Coerces float64 to int because JSON and Javascript kinda suck.
 func (c Config) Int(key string) (int, bool) {
@@ -143,7 +158,7 @@ func (c Config) StringSlice(key string) ([]string, bool) {
 	}
 
 	var slice []string
-	if intfSlice, ok := ss.([]interface{}); ok {
+	if intfSlice, ok := ss.([]any); ok {
 		for _, i := range intfSlice {
 			slice = append(slice, i.(string))
 		}
@@ -171,12 +186,12 @@ func (c Config) MustForeignKeys(key string) []ForeignKey {
 		return nil
 	case []ForeignKey:
 		return v
-	case []interface{}: // in case binary, config is pass to driver in json format, so this key will be []interface{}
+	case []any: // in case binary, config is pass to driver in json format, so this key will be []any
 		fks := make([]ForeignKey, 0, len(v))
 		for _, item := range v {
-			fk, ok := item.(map[string]interface{})
+			fk, ok := item.(map[string]any)
 			if !ok {
-				panic(errors.Errorf("found item of foreign keys, but it was not a map[string]interface{} (%T)", v))
+				panic(errors.Errorf("found item of foreign keys, but it was not a map[string]any (%T)", v))
 			}
 
 			configFK := Config(fk)

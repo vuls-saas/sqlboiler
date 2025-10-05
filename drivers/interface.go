@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 // These constants are used in the config map passed into the driver
@@ -17,15 +17,19 @@ const (
 	ConfigBlacklist      = "blacklist"
 	ConfigWhitelist      = "whitelist"
 	ConfigSchema         = "schema"
+	ConfigNoOutputSchema = "no-output-schema" // Determine if templates/output include a schema, even if we used one to gather info
 	ConfigAddEnumTypes   = "add-enum-types"
 	ConfigEnumNullPrefix = "enum-null-prefix"
 	ConfigConcurrency    = "concurrency"
 	ConfigForeignKeys    = "foreign-keys"
 
-	ConfigUser    = "user"
-	ConfigPass    = "pass"
-	ConfigHost    = "host"
-	ConfigPort    = "port"
+	ConfigUser = "user"
+	ConfigPass = "pass"
+	ConfigHost = "host"
+	ConfigPort = "port"
+
+	ConfigUnixSocket = "unix-socket"
+
 	ConfigDBName  = "dbname"
 	ConfigSSLMode = "sslmode"
 

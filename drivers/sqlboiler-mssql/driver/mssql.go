@@ -12,10 +12,10 @@ import (
 	// Side effect import go-mssqldb
 	"github.com/friendsofgo/errors"
 	_ "github.com/microsoft/go-mssqldb"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 //go:embed override
@@ -157,7 +157,7 @@ func (m *MSSQLDriver) TableNames(schema string, whitelist, blacklist []string) (
 		FROM   information_schema.tables
 		WHERE  table_schema = ? AND table_type = 'BASE TABLE'`
 
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -203,7 +203,7 @@ func (m *MSSQLDriver) ViewNames(schema string, whitelist, blacklist []string) ([
 	var names []string
 
 	query := `select table_name from information_schema.views where table_schema = ?`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -265,7 +265,7 @@ func (m *MSSQLDriver) ViewColumns(schema, tableName string, whitelist, blacklist
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (m *MSSQLDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	var columns []drivers.Column
-	args := []interface{}{schema, tableName}
+	args := []any{schema, tableName}
 	query := `
 	SELECT column_name,
        CASE
@@ -308,7 +308,9 @@ func (m *MSSQLDriver) Columns(schema, tableName string, whitelist, blacklist []s
 				args = append(args, w)
 			}
 		}
-	} else if len(blacklist) > 0 {
+	}
+	
+	if len(blacklist) > 0 {
 		cols := drivers.ColumnsFromList(blacklist, tableName)
 		if len(cols) > 0 {
 			query += fmt.Sprintf(" and c.column_name not in (%s)", strmangle.Placeholders(true, len(cols), 3, 1))
@@ -560,8 +562,8 @@ func (MSSQLDriver) Imports() (col importers.Collection, err error) {
 				`"strings"`,
 			},
 			ThirdParty: importers.List{
-				`"github.com/volatiletech/strmangle"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers"`,
+				`"github.com/aarondl/strmangle"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers"`,
 			},
 		},
 	}
@@ -585,8 +587,8 @@ func (MSSQLDriver) Imports() (col importers.Collection, err error) {
 				`"github.com/kat-co/vala"`,
 				`"github.com/friendsofgo/errors"`,
 				`"github.com/spf13/viper"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mssql/driver"`,
-				`"github.com/volatiletech/randomize"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-mssql/driver"`,
+				`"github.com/aarondl/randomize"`,
 				`_ "github.com/microsoft/go-mssqldb"`,
 			},
 		},
@@ -594,61 +596,61 @@ func (MSSQLDriver) Imports() (col importers.Collection, err error) {
 
 	col.BasedOnType = importers.Map{
 		"null.Float32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Float64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.String": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bool": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Time": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bytes": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"time.Time": {
 			Standard: importers.List{`"time"`},
 		},
 		"types.Decimal": {
-			Standard: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			Standard: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.NullDecimal": {
-			Standard: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			Standard: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"mssql.UniqueIdentifier": {
 			Standard: importers.List{`"github.com/microsoft/go-mssqldb"`},

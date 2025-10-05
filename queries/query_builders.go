@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 )
 
 var (
@@ -19,9 +19,9 @@ var (
 // BuildQuery builds a query object into the query string
 // and it's accompanying arguments. Using this method
 // allows query building without immediate execution.
-func BuildQuery(q *Query) (string, []interface{}) {
+func BuildQuery(q *Query) (string, []any) {
 	var buf *bytes.Buffer
-	var args []interface{}
+	var args []any
 
 	q.removeSoftDeleteWhere()
 
@@ -46,12 +46,20 @@ func BuildQuery(q *Query) (string, []interface{}) {
 	return bufStr, args
 }
 
-func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
-	var args []interface{}
+	var args []any
 
 	writeComment(q, buf)
 	writeCTEs(q, buf, &args)
+
+	hasHaving := len(q.having) != 0
+	hasGroupBy := len(q.groupBy) != 0
+	hasSimpleCount := q.count && !hasHaving && !hasGroupBy
+	hasComplexCount := q.count && (hasHaving || hasGroupBy)
+	if hasComplexCount {
+		buf.WriteString("SELECT COUNT(*) FROM (")
+	}
 
 	buf.WriteString("SELECT ")
 
@@ -61,7 +69,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 		}
 	}
 
-	if q.count {
+	if hasSimpleCount {
 		buf.WriteString("COUNT(")
 	}
 
@@ -70,20 +78,20 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	hasDistinct := q.distinct != ""
 	if hasDistinct {
 		buf.WriteString("DISTINCT ")
-		if q.count {
+		if hasSimpleCount {
 			buf.WriteString("(")
 		}
 		buf.WriteString(q.distinct)
-		if q.count {
+		if hasSimpleCount {
 			buf.WriteString(")")
 		}
-	} else if hasJoins && hasSelectCols && !q.count {
+	} else if hasJoins && hasSelectCols && !hasSimpleCount {
 		selectColsWithAs := writeAsStatements(q)
 		// Don't identQuoteSlice - writeAsStatements does this
 		buf.WriteString(strings.Join(selectColsWithAs, ", "))
 	} else if hasSelectCols {
 		buf.WriteString(strings.Join(strmangle.IdentQuoteSlice(q.dialect.LQ, q.dialect.RQ, q.selectCols), ", "))
-	} else if hasJoins && !q.count {
+	} else if hasJoins && !hasSimpleCount {
 		selectColsWithStars := writeStars(q)
 		buf.WriteString(strings.Join(selectColsWithStars, ", "))
 	} else {
@@ -91,7 +99,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	}
 
 	// close SQL COUNT function
-	if q.count {
+	if hasSimpleCount {
 		buf.WriteByte(')')
 	}
 
@@ -121,7 +129,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 		} else {
 			resp = joinBuf.String()
 		}
-		fmt.Fprintf(buf, resp)
+		fmt.Fprint(buf, resp)
 		strmangle.PutBuffer(joinBuf)
 	}
 
@@ -133,12 +141,15 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []interface{}) {
 
 	writeModifiers(q, buf, &args)
 
+	if hasComplexCount {
+		buf.WriteString(") AS q")
+	}
 	buf.WriteByte(';')
 	return buf, args
 }
 
-func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
-	var args []interface{}
+func buildDeleteQuery(q *Query) (*bytes.Buffer, []any) {
+	var args []any
 	buf := strmangle.GetBuffer()
 
 	writeComment(q, buf)
@@ -160,9 +171,9 @@ func buildDeleteQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func buildUpdateQuery(q *Query) (*bytes.Buffer, []interface{}) {
+func buildUpdateQuery(q *Query) (*bytes.Buffer, []any) {
 	buf := strmangle.GetBuffer()
-	var args []interface{}
+	var args []any
 
 	writeComment(q, buf)
 	writeCTEs(q, buf, &args)
@@ -204,10 +215,10 @@ func buildUpdateQuery(q *Query) (*bytes.Buffer, []interface{}) {
 	return buf, args
 }
 
-func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}, keyword, delim string, clauses []argClause) {
+func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]any, keyword, delim string, clauses []argClause) {
 	argsLen := len(*args)
 	modBuf := strmangle.GetBuffer()
-	fmt.Fprintf(modBuf, keyword)
+	fmt.Fprint(modBuf, keyword)
 
 	for i, j := range clauses {
 		if i > 0 {
@@ -228,7 +239,7 @@ func writeParameterizedModifiers(q *Query, buf *bytes.Buffer, args *[]interface{
 	strmangle.PutBuffer(modBuf)
 }
 
-func writeModifiers(q *Query, buf *bytes.Buffer, args *[]interface{}) {
+func writeModifiers(q *Query, buf *bytes.Buffer, args *[]any) {
 	if len(q.groupBy) != 0 {
 		fmt.Fprintf(buf, " GROUP BY %s", strings.Join(q.groupBy, ", "))
 	}
@@ -336,7 +347,7 @@ func writeAsStatements(q *Query) []string {
 // WHERE (a=$1) AND (b=$2) AND (a,b) in (($3, $4), ($5, $6))
 //
 // startAt specifies what number placeholders start at
-func whereClause(q *Query, startAt int) (string, []interface{}) {
+func whereClause(q *Query, startAt int) (string, []any) {
 	if len(q.where) == 0 {
 		return "", nil
 	}
@@ -353,7 +364,7 @@ ManualParen:
 
 	buf := strmangle.GetBuffer()
 	defer strmangle.PutBuffer(buf)
-	var args []interface{}
+	var args []any
 
 	notFirstExpression := false
 	buf.WriteString(" WHERE ")
@@ -606,7 +617,7 @@ func writeComment(q *Query, buf *bytes.Buffer) {
 	}
 }
 
-func writeCTEs(q *Query, buf *bytes.Buffer, args *[]interface{}) {
+func writeCTEs(q *Query, buf *bytes.Buffer, args *[]any) {
 	if len(q.withs) == 0 {
 		return
 	}
@@ -629,6 +640,7 @@ func writeCTEs(q *Query, buf *bytes.Buffer, args *[]interface{}) {
 	} else {
 		resp = withBuf.String()
 	}
-	fmt.Fprintf(buf, resp)
+	fmt.Fprint(buf, resp)
 	strmangle.PutBuffer(withBuf)
 }
+

@@ -11,10 +11,10 @@ import (
 
 	"github.com/friendsofgo/errors"
 	"github.com/go-sql-driver/mysql"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 //go:embed override
@@ -80,7 +80,11 @@ func (m *MySQLDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo, e
 	dbname := config.MustString(drivers.ConfigDBName)
 	host := config.MustString(drivers.ConfigHost)
 	port := config.DefaultInt(drivers.ConfigPort, 3306)
-	sslmode := config.DefaultString(drivers.ConfigSSLMode, "true")
+	unixSocket := config.DefaultString(drivers.ConfigUnixSocket, "")
+	// mysql ssl mode
+	// see https://dev.mysql.com/doc/refman/5.7/en/connection-options.html#option_general_ssl-mode
+	// could be one of PREFERRED, REQUIRED, VERIFY_CA, VERIFY_IDENTITY
+	sslMode := config.DefaultString(drivers.ConfigSSLMode, "true")
 
 	schema := dbname
 	whitelist, _ := config.StringSlice(drivers.ConfigWhitelist)
@@ -96,7 +100,13 @@ func (m *MySQLDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo, e
 
 	m.addEnumTypes, _ = config[drivers.ConfigAddEnumTypes].(bool)
 	m.enumNullPrefix = strmangle.TitleCase(config.DefaultString(drivers.ConfigEnumNullPrefix, "Null"))
-	m.connStr = MySQLBuildQueryString(user, pass, dbname, host, port, sslmode)
+
+	if unixSocket != "" {
+		m.connStr = MySQLBuildQueryStringUnixSocket(user, pass, dbname, unixSocket, sslMode)
+	} else {
+		m.connStr = MySQLBuildQueryString(user, pass, dbname, host, port, sslMode)
+	}
+
 	m.configForeignKeys = config.MustForeignKeys(drivers.ConfigForeignKeys)
 	m.conn, err = sql.Open("mysql", m.connStr)
 	if err != nil {
@@ -128,8 +138,26 @@ func (m *MySQLDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo, e
 	return dbinfo, err
 }
 
+func MySQLBuildQueryStringUnixSocket(user, pass, dbname, unixSocket string, sslMode string) string {
+	config := mysql.NewConfig()
+
+	config.User = user
+	if len(pass) != 0 {
+		config.Passwd = pass
+	}
+	config.DBName = dbname
+	config.Net = "unix"
+	config.Addr = unixSocket
+	config.TLSConfig = sslMode
+
+	// MySQL is a bad, and by default reads date/datetime into a []byte
+	// instead of a time.Time. Tell it to stop being a bad.
+	config.ParseTime = true
+	return config.FormatDSN()
+}
+
 // MySQLBuildQueryString builds a query string for MySQL.
-func MySQLBuildQueryString(user, pass, dbname, host string, port int, sslmode string) string {
+func MySQLBuildQueryString(user, pass, dbname, host string, port int, sslMode string) string {
 	config := mysql.NewConfig()
 
 	config.User = user
@@ -143,7 +171,7 @@ func MySQLBuildQueryString(user, pass, dbname, host string, port int, sslmode st
 		port = 3306
 	}
 	config.Addr += ":" + strconv.Itoa(port)
-	config.TLSConfig = sslmode
+	config.TLSConfig = sslMode
 
 	// MySQL is a bad, and by default reads date/datetime into a []byte
 	// instead of a time.Time. Tell it to stop being a bad.
@@ -159,7 +187,7 @@ func (m *MySQLDriver) TableNames(schema string, whitelist, blacklist []string) (
 	var names []string
 
 	query := `select table_name from information_schema.tables where table_schema = ? and table_type = 'BASE TABLE'`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -205,7 +233,7 @@ func (m *MySQLDriver) ViewNames(schema string, whitelist, blacklist []string) ([
 	var names []string
 
 	query := `select table_name from information_schema.views where table_schema = ?`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -267,7 +295,7 @@ func (m *MySQLDriver) ViewColumns(schema, tableName string, whitelist, blacklist
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (m *MySQLDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	var columns []drivers.Column
-	args := []interface{}{tableName, tableName, schema, schema, schema, schema, tableName, tableName, schema}
+	args := []any{tableName, tableName, schema, schema, schema, schema, tableName, tableName, schema}
 
 	query := `
 	select
@@ -304,7 +332,9 @@ func (m *MySQLDriver) Columns(schema, tableName string, whitelist, blacklist []s
 				args = append(args, w)
 			}
 		}
-	} else if len(blacklist) > 0 {
+	}
+	
+	if len(blacklist) > 0 {
 		cols := drivers.ColumnsFromList(blacklist, tableName)
 		if len(cols) > 0 {
 			query += fmt.Sprintf(" and c.column_name not in (%s)", strings.Repeat(",?", len(cols))[1:])
@@ -601,8 +631,8 @@ func (MySQLDriver) Imports() (col importers.Collection, err error) {
 				`"strings"`,
 			},
 			ThirdParty: importers.List{
-				`"github.com/volatiletech/strmangle"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers"`,
+				`"github.com/aarondl/strmangle"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers"`,
 			},
 		},
 	}
@@ -628,8 +658,8 @@ func (MySQLDriver) Imports() (col importers.Collection, err error) {
 				`"github.com/kat-co/vala"`,
 				`"github.com/friendsofgo/errors"`,
 				`"github.com/spf13/viper"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql/driver"`,
-				`"github.com/volatiletech/randomize"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-mysql/driver"`,
+				`"github.com/aarondl/randomize"`,
 				`_ "github.com/go-sql-driver/mysql"`,
 			},
 		},
@@ -637,68 +667,68 @@ func (MySQLDriver) Imports() (col importers.Collection, err error) {
 
 	col.BasedOnType = importers.Map{
 		"null.Float32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Float64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.String": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bool": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Time": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bytes": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 
 		"time.Time": {
 			Standard: importers.List{`"time"`},
 		},
 		"types.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.Decimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.NullDecimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 	}
 	return col, err

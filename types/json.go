@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/volatiletech/randomize"
+	"github.com/aarondl/randomize"
 )
 
 // JSON is an alias for json.RawMessage, which is
@@ -19,12 +19,12 @@ func (j JSON) String() string {
 }
 
 // Unmarshal your JSON variable into dest.
-func (j JSON) Unmarshal(dest interface{}) error {
+func (j JSON) Unmarshal(dest any) error {
 	return json.Unmarshal(j, dest)
 }
 
 // Marshal obj into your JSON variable.
-func (j *JSON) Marshal(obj interface{}) error {
+func (j *JSON) Marshal(obj any) error {
 	res, err := json.Marshal(obj)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (j JSON) Value() (driver.Value, error) {
 }
 
 // Scan stores the src in *j.
-func (j *JSON) Scan(src interface{}) error {
+func (j *JSON) Scan(src any) error {
 	switch source := src.(type) {
 	case string:
 		*j = append((*j)[0:0], source...)

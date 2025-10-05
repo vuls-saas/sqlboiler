@@ -13,12 +13,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
 
 	// Side-effect import sql driver
 	_ "github.com/lib/pq"
@@ -97,11 +97,20 @@ func (p *PostgresDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo
 	port := config.DefaultInt(drivers.ConfigPort, 5432)
 	sslmode := config.DefaultString(drivers.ConfigSSLMode, "require")
 	schema := config.DefaultString(drivers.ConfigSchema, "public")
+	noOutputSchema := config.DefaultBool(drivers.ConfigNoOutputSchema, false)
 	whitelist, _ := config.StringSlice(drivers.ConfigWhitelist)
 	blacklist, _ := config.StringSlice(drivers.ConfigBlacklist)
 	concurrency := config.DefaultInt(drivers.ConfigConcurrency, drivers.DefaultConcurrency)
 
-	useSchema := schema != "public"
+	switch {
+	case noOutputSchema:
+		break
+	case schema == "public":
+		noOutputSchema = true
+	default:
+		// just to be explicit, even though it's the default in the getter
+		noOutputSchema = false
+	}
 
 	p.addEnumTypes, _ = config[drivers.ConfigAddEnumTypes].(bool)
 	p.enumNullPrefix = strmangle.TitleCase(config.DefaultString(drivers.ConfigEnumNullPrefix, "Null"))
@@ -135,7 +144,7 @@ func (p *PostgresDriver) Assemble(config drivers.Config) (dbinfo *drivers.DBInfo
 			RQ: '"',
 
 			UseIndexPlaceholders: true,
-			UseSchema:            useSchema,
+			UseSchema:            !noOutputSchema,
 			UseDefaultKeyword:    true,
 		},
 	}
@@ -179,7 +188,7 @@ func (p *PostgresDriver) TableNames(schema string, whitelist, blacklist []string
 	var names []string
 
 	query := `select table_name from information_schema.tables where table_schema = $1 and table_type = 'BASE TABLE'`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
 		if len(tables) > 0 {
@@ -236,7 +245,7 @@ func (p *PostgresDriver) ViewNames(schema string, whitelist, blacklist []string)
 				schemaname as table_schema 
 			from pg_matviews 
 	) as v where v.table_schema= $1`
-	args := []interface{}{schema}
+	args := []any{schema}
 	if len(whitelist) > 0 {
 		views := drivers.TablesFromList(whitelist)
 		if len(views) > 0 {
@@ -356,7 +365,7 @@ method_b as (
     inner join pg_class pgc on pgix.indexname = pgc.relname and pgc.relkind = 'i' and pgc.relnatts = 1
     inner join pg_index pgi on pgi.indexrelid = pgc.oid
     inner join pg_attribute pga on pga.attrelid = pgi.indrelid and pga.attnum = ANY(pgi.indkey)
-    where pgi.indisunique = true
+    where pgi.indisunique = true and pgi.indpred is null
 ),
 results as (
     select * from method_a
@@ -391,7 +400,7 @@ func (p *PostgresDriver) ViewColumns(schema, tableName string, whitelist, blackl
 // converts the SQL types to Go types, for example: "varchar" to "string"
 func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist []string) ([]drivers.Column, error) {
 	var columns []drivers.Column
-	args := []interface{}{schema, tableName}
+	args := []any{schema, tableName}
 
 	matviewQuery := `WITH cte_pg_attribute AS (
 		SELECT
@@ -567,7 +576,7 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 
 	query := fmt.Sprintf(`SELECT 
 		column_name,
-		column_type,
+		COALESCE(column_type, column_full_type) as column_type,
 		column_full_type,
 		udt_name,
 		array_type,
@@ -591,7 +600,9 @@ func (p *PostgresDriver) Columns(schema, tableName string, whitelist, blacklist 
 				args = append(args, w)
 			}
 		}
-	} else if len(blacklist) > 0 {
+	}
+	
+	if len(blacklist) > 0 {
 		cols := drivers.ColumnsFromList(blacklist, tableName)
 		if len(cols) > 0 {
 			query += fmt.Sprintf(" where c.column_name not in (%s)", strmangle.Placeholders(true, len(cols), 3, 1))
@@ -1036,8 +1047,8 @@ func (p PostgresDriver) Imports() (importers.Collection, error) {
 				`"strings"`,
 			},
 			ThirdParty: importers.List{
-				`"github.com/volatiletech/strmangle"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers"`,
+				`"github.com/aarondl/strmangle"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers"`,
 			},
 		},
 		"psql_any": {
@@ -1067,141 +1078,141 @@ func (p PostgresDriver) Imports() (importers.Collection, error) {
 				`"github.com/kat-co/vala"`,
 				`"github.com/friendsofgo/errors"`,
 				`"github.com/spf13/viper"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql/driver"`,
-				`"github.com/volatiletech/randomize"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-psql/driver"`,
+				`"github.com/aarondl/randomize"`,
 				`_ "github.com/lib/pq"`,
 			},
 		},
 	}
 	col.BasedOnType = importers.Map{
 		"null.Float32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Float64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.String": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bool": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Time": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bytes": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"time.Time": {
 			Standard: importers.List{`"time"`},
 		},
 		"types.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.Decimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.Byte": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.BytesArray": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.Int64Array": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.Float64Array": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.BoolArray": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.StringArray": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.DecimalArray": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.HStore": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"pgeo.Point": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.Line": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.Lseg": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.Box": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.Path": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.Polygon": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"types.NullDecimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"pgeo.Circle": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullPoint": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullLine": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullLseg": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullBox": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullPath": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullPolygon": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 		"pgeo.NullCircle": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types/pgeo"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types/pgeo"`},
 		},
 	}
 

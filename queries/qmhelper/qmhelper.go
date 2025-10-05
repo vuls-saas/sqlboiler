@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/volatiletech/sqlboiler/v4/queries"
+	"github.com/aarondl/sqlboiler/v4/queries"
 )
 
 // Nullable object
@@ -15,7 +15,7 @@ type Nullable interface {
 // WhereQueryMod allows construction of where clauses
 type WhereQueryMod struct {
 	Clause string
-	Args   []interface{}
+	Args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -24,7 +24,7 @@ func (qm WhereQueryMod) Apply(q *queries.Query) {
 }
 
 // WhereNullEQ is a helper for doing equality with null types
-func WhereNullEQ(name string, negated bool, value interface{}) WhereQueryMod {
+func WhereNullEQ(name string, negated bool, value any) WhereQueryMod {
 	isNull := false
 	if nullable, ok := value.(Nullable); ok {
 		isNull = nullable.IsZero()
@@ -49,7 +49,7 @@ func WhereNullEQ(name string, negated bool, value interface{}) WhereQueryMod {
 
 	return WhereQueryMod{
 		Clause: fmt.Sprintf("%s %s ?", name, op),
-		Args:   []interface{}{value},
+		Args:   []any{value},
 	}
 }
 
@@ -76,9 +76,9 @@ const (
 )
 
 // Where is a helper for doing operations on primitive types
-func Where(name string, operator operator, value interface{}) WhereQueryMod {
+func Where(name string, operator operator, value any) WhereQueryMod {
 	return WhereQueryMod{
 		Clause: fmt.Sprintf("%s %s ?", name, string(operator)),
-		Args:   []interface{}{value},
+		Args:   []any{value},
 	}
 }

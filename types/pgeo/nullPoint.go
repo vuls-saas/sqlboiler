@@ -20,7 +20,7 @@ func (p NullPoint) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (p *NullPoint) Scan(src interface{}) error {
+func (p *NullPoint) Scan(src any) error {
 	if src == nil {
 		p.Point, p.Valid = NewPoint(0, 0), false
 		return nil

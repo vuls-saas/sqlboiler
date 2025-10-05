@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
 )
 
 func TestConfig_OutputDirDepth(t *testing.T) {
@@ -45,19 +45,19 @@ func TestConfig_OutputDirDepth(t *testing.T) {
 func TestConvertAliases(t *testing.T) {
 	t.Parallel()
 
-	var intf interface{} = map[string]interface{}{
-		"tables": map[string]interface{}{
-			"table_name": map[string]interface{}{
+	var intf any = map[string]any{
+		"tables": map[string]any{
+			"table_name": map[string]any{
 				"up_plural":     "a",
 				"up_singular":   "b",
 				"down_plural":   "c",
 				"down_singular": "d",
 
-				"columns": map[string]interface{}{
+				"columns": map[string]any{
 					"a": "b",
 				},
-				"relationships": map[string]interface{}{
-					"ib_fk_1": map[string]interface{}{
+				"relationships": map[string]any{
+					"ib_fk_1": map[string]any{
 						"local":   "a",
 						"foreign": "b",
 					},
@@ -110,23 +110,23 @@ func TestConvertAliases(t *testing.T) {
 func TestConvertAliasesAltSyntax(t *testing.T) {
 	t.Parallel()
 
-	var intf interface{} = map[string]interface{}{
-		"tables": []interface{}{
-			map[string]interface{}{
+	var intf any = map[string]any{
+		"tables": []any{
+			map[string]any{
 				"name":          "table_name",
 				"up_plural":     "a",
 				"up_singular":   "b",
 				"down_plural":   "c",
 				"down_singular": "d",
 
-				"columns": []interface{}{
-					map[string]interface{}{
+				"columns": []any{
+					map[string]any{
 						"name":  "a",
 						"alias": "b",
 					},
 				},
-				"relationships": []interface{}{
-					map[string]interface{}{
+				"relationships": []any{
+					map[string]any{
 						"name":    "ib_fk_1",
 						"local":   "a",
 						"foreign": "b",
@@ -180,7 +180,7 @@ func TestConvertAliasesAltSyntax(t *testing.T) {
 func TestConvertTypeReplace(t *testing.T) {
 	t.Parallel()
 
-	fullColumn := map[string]interface{}{
+	fullColumn := map[string]any{
 		"name":           "a",
 		"type":           "b",
 		"db_type":        "c",
@@ -192,15 +192,15 @@ func TestConvertTypeReplace(t *testing.T) {
 		"nullable":       true,
 	}
 
-	var intf interface{} = []interface{}{
-		map[string]interface{}{
+	var intf any = []any{
+		map[string]any{
 			"match":   fullColumn,
 			"replace": fullColumn,
-			"imports": map[string]interface{}{
-				"standard": []interface{}{
+			"imports": map[string]any{
+				"standard": []any{
 					"abc",
 				},
-				"third_party": []interface{}{
+				"third_party": []any{
 					"github.com/abc",
 				},
 			},
@@ -258,8 +258,8 @@ func TestConvertTypeReplace(t *testing.T) {
 func TestConvertForeignKeys(t *testing.T) {
 	t.Parallel()
 
-	var intf interface{} = map[string]interface{}{
-		"fk_1": map[string]interface{}{
+	var intf any = map[string]any{
+		"fk_1": map[string]any{
 			"table":          "table_name",
 			"column":         "column_name",
 			"foreign_table":  "foreign_table_name",
@@ -289,8 +289,8 @@ func TestConvertForeignKeys(t *testing.T) {
 func TestConvertForeignKeysAltSyntax(t *testing.T) {
 	t.Parallel()
 
-	var intf interface{} = []interface{}{
-		map[string]interface{}{
+	var intf any = []any{
+		map[string]any{
 			"name":           "fk_1",
 			"table":          "table_name",
 			"column":         "column_name",

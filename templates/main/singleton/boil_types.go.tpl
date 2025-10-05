@@ -1,5 +1,5 @@
 // M type is for providing columns and column values to UpdateAll.
-type M map[string]interface{}
+type M map[string]any
 
 // ErrSyncFail occurs during insert when the record could not be retrieved in
 // order to populate default value information. This usually happens when LastInsertId
@@ -62,6 +62,7 @@ It only titlecases the EnumValue portion if it's snake-cased.
 */}}
 {{$once := onceNew}}
 {{$onceNull := onceNew}}
+{{$ignoredEnumTypes := .DiscardedEnumTypes -}}
 {{- range $table := .Tables -}}
 	{{- range $col := $table.Columns | filterColumnsByEnum -}}
 		{{- $name := parseEnumName $col.DBType -}}
@@ -81,6 +82,9 @@ It only titlecases the EnumValue portion if it's snake-cased.
 				{{- else -}}
 					{{ $enumName = printf "%s%s" (titleCase $table.Name) (titleCase $col.Name)}}
 				{{- end -}}
+				{{if containsAny $ignoredEnumTypes $enumName -}}
+					{{continue}}
+				{{end -}}
 				{{/* First iteration for enum type $name (nullable or not) */}}
 				{{- $enumFirstIter := and
 					(not ($once.Has $name))
@@ -253,7 +257,7 @@ It only titlecases the EnumValue portion if it's snake-cased.
 						}
 
 						// Scan implements the Scanner interface.
-						func (e *{{$enumType}}) Scan(value interface{}) error {
+						func (e *{{$enumType}}) Scan(value any) error {
 							if value == nil {
 								e.Val, e.Valid = "", false
 								return nil

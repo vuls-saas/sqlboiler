@@ -13,10 +13,10 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/aarondl/strmangle"
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/strmangle"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
 )
 
 // templateData for sqlboiler templates
@@ -39,19 +39,22 @@ type templateData struct {
 	RQ string
 
 	// Control various generation features
-	AddGlobal         bool
-	AddPanic          bool
-	AddSoftDeletes    bool
-	AddEnumTypes      bool
-	EnumNullPrefix    string
-	AddStrictUpsert   bool
-	NoContext         bool
-	NoHooks           bool
-	NoAutoTimestamps  bool
-	NoRowsAffected    bool
-	NoDriverTemplates bool
-	NoBackReferencing bool
-	AlwaysWrapErrors  bool
+	// NoOutputSchema, which is also used for generation, is defined in the drivers configuration
+	AddGlobal             bool
+	AddPanic              bool
+	AddSoftDeletes        bool
+	AddEnumTypes          bool
+	SkipReplacedEnumTypes bool
+	EnumNullPrefix        string
+	AddStrictUpsert       bool
+	NoContext             bool
+	NoHooks               bool
+	NoAutoTimestamps      bool
+	NoRowsAffected        bool
+	NoDriverTemplates     bool
+	NoBackReferencing     bool
+	NoRelationGetters     bool
+	AlwaysWrapErrors      bool
 
 	// Tags control which tags are added to the struct
 	Tags []string
@@ -81,6 +84,9 @@ type templateData struct {
 
 	// AutoColumns set the name of the columns for auto timestamps and soft deletes
 	AutoColumns AutoColumns
+
+	// Enum types which will not be generated, because they were replaced.
+	DiscardedEnumTypes []string
 }
 
 func (t templateData) Quotes(s string) string {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/volatiletech/null/v8"
+	"github.com/aarondl/null/v8"
 )
 
 type testObj struct {
@@ -28,7 +28,7 @@ func TestNonZeroDefaultSet(t *testing.T) {
 
 	tests := []struct {
 		Defaults []string
-		Obj      interface{}
+		Obj      any
 		Ret      []string
 	}{
 		{

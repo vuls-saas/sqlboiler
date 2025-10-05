@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
 )
 
 var writeGoldenFiles = flag.Bool(
@@ -29,17 +29,17 @@ func TestBuildQuery(t *testing.T) {
 
 	tests := []struct {
 		q    *Query
-		args []interface{}
+		args []any
 	}{
 		{&Query{from: []string{"t"}}, nil},
 		{&Query{from: []string{"q"}, limit: newIntPtr(5), offset: 6}, nil},
 		{&Query{
 			from: []string{"q"},
 			orderBy: []argClause{
-				{"a ASC", []interface{}{}},
-				{"b like ? DESC", []interface{}{"stuff"}},
+				{"a ASC", []any{}},
+				{"b like ? DESC", []any{"stuff"}},
 			},
-		}, []interface{}{"stuff"}},
+		}, []any{"stuff"}},
 		{&Query{from: []string{"t"}, selectCols: []string{"count(*) as ab, thing as bd", `"stuff"`}}, nil},
 		{&Query{from: []string{"a", "b"}, selectCols: []string{"count(*) as ab, thing as bd", `"stuff"`}}, nil},
 		{&Query{
@@ -55,52 +55,52 @@ func TestBuildQuery(t *testing.T) {
 			from: []string{"videos"},
 			joins: []join{{
 				clause: "(select id from users where deleted = ?) u on u.id = videos.user_id",
-				args:   []interface{}{true},
+				args:   []any{true},
 			}},
-			where: []where{{clause: "videos.deleted = ?", args: []interface{}{false}}},
-		}, []interface{}{true, false}},
+			where: []where{{clause: "videos.deleted = ?", args: []any{false}}},
+		}, []any{true, false}},
 		{&Query{
 			from:    []string{"a"},
 			groupBy: []string{"id", "name"},
 			where: []where{
-				{clause: "a=? or b=?", args: []interface{}{1, 2}},
-				{clause: "c=?", args: []interface{}{3}},
+				{clause: "a=? or b=?", args: []any{1, 2}},
+				{clause: "c=?", args: []any{3}},
 			},
 			having: []argClause{
-				{clause: "id <> ?", args: []interface{}{1}},
-				{clause: "length(name, ?) > ?", args: []interface{}{"utf8", 5}},
+				{clause: "id <> ?", args: []any{1}},
+				{clause: "length(name, ?) > ?", args: []any{"utf8", 5}},
 			},
-		}, []interface{}{1, 2, 3, 1, "utf8", 5}},
+		}, []any{1, 2, 3, 1, "utf8", 5}},
 		{&Query{
 			delete: true,
 			from:   []string{"thing happy", `upset as "sad"`, "fun", "thing as stuff", `"angry" as mad`},
 			where: []where{
-				{clause: "a=?", args: []interface{}{1}},
-				{clause: "b=?", args: []interface{}{2}},
-				{clause: "c=?", args: []interface{}{3}},
+				{clause: "a=?", args: []any{1}},
+				{clause: "b=?", args: []any{2}},
+				{clause: "c=?", args: []any{3}},
 			},
-		}, []interface{}{1, 2, 3}},
+		}, []any{1, 2, 3}},
 		{&Query{
 			delete: true,
 			from:   []string{"thing happy", `upset as "sad"`, "fun", "thing as stuff", `"angry" as mad`},
 			where: []where{
-				{clause: "(id=? and thing=?) or stuff=?", args: []interface{}{1, 2, 3}},
+				{clause: "(id=? and thing=?) or stuff=?", args: []any{1, 2, 3}},
 			},
 			limit: newIntPtr(5),
-		}, []interface{}{1, 2, 3}},
+		}, []any{1, 2, 3}},
 		{&Query{
 			from: []string{"thing happy", `"fun"`, `stuff`},
-			update: map[string]interface{}{
+			update: map[string]any{
 				"col1":       1,
 				`"col2"`:     2,
 				`"fun".col3`: 3,
 			},
 			where: []where{
-				{clause: "aa=? or bb=? or cc=?", orSeparator: true, args: []interface{}{4, 5, 6}},
-				{clause: "dd=? or ee=? or ff=? and gg=?", args: []interface{}{7, 8, 9, 10}},
+				{clause: "aa=? or bb=? or cc=?", orSeparator: true, args: []any{4, 5, 6}},
+				{clause: "dd=? or ee=? or ff=? and gg=?", args: []any{7, 8, 9, 10}},
 			},
 			limit: newIntPtr(5),
-		}, []interface{}{2, 3, 1, 4, 5, 6, 7, 8, 9, 10}},
+		}, []any{2, 3, 1, 4, 5, 6, 7, 8, 9, 10}},
 		{&Query{from: []string{"cats"}, joins: []join{{JoinInner, "dogs d on d.cat_id = cats.id", nil}}}, nil},
 		{&Query{from: []string{"cats c"}, joins: []join{{JoinInner, "dogs d on d.cat_id = cats.id", nil}}}, nil},
 		{&Query{from: []string{"cats as c"}, joins: []join{{JoinInner, "dogs d on d.cat_id = cats.id", nil}}}, nil},
@@ -121,9 +121,9 @@ func TestBuildQuery(t *testing.T) {
 			from: []string{"t"},
 			withs: []argClause{
 				{"cte_0 AS (SELECT * FROM other_t0)", nil},
-				{"cte_1 AS (SELECT * FROM other_t1 WHERE thing=? AND stuff=?)", []interface{}{3, 7}},
+				{"cte_1 AS (SELECT * FROM other_t1 WHERE thing=? AND stuff=?)", []any{3, 7}},
 			},
-		}, []interface{}{3, 7},
+		}, []any{3, 7},
 		},
 		{&Query{from: []string{"t"}, distinct: "id"}, nil},
 		{&Query{from: []string{"t"}, distinct: "id", count: true}, nil},
@@ -339,20 +339,20 @@ func TestNotInClause(t *testing.T) {
 	tests := []struct {
 		q      Query
 		expect string
-		args   []interface{}
+		args   []any
 	}{
 		{
 			q: Query{
-				where: []where{{kind: whereKindNotIn, clause: "a not in ?", args: []interface{}{}, orSeparator: true}},
+				where: []where{{kind: whereKindNotIn, clause: "a not in ?", args: []any{}, orSeparator: true}},
 			},
 			expect: ` WHERE (1=1)`,
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindNotIn, clause: "a not in ?", args: []interface{}{1}, orSeparator: true}},
+				where: []where{{kind: whereKindNotIn, clause: "a not in ?", args: []any{1}, orSeparator: true}},
 			},
 			expect: ` WHERE ("a" NOT IN ($1))`,
-			args:   []interface{}{1},
+			args:   []any{1},
 		},
 	}
 	for i, test := range tests {
@@ -373,130 +373,130 @@ func TestInClause(t *testing.T) {
 	tests := []struct {
 		q      Query
 		expect string
-		args   []interface{}
+		args   []any
 	}{
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: "a in ?", args: []interface{}{}, orSeparator: true}},
+				where: []where{{kind: whereKindIn, clause: "a in ?", args: []any{}, orSeparator: true}},
 			},
 			expect: ` WHERE (1=0)`,
 		},
 		{
 			q: Query{
 				where: []where{
-					where{kind: whereKindIn, clause: "a in ?", args: []interface{}{}, orSeparator: true},
-					where{kind: whereKindIn, clause: "a in ?", args: []interface{}{1}, orSeparator: true},
+					where{kind: whereKindIn, clause: "a in ?", args: []any{}, orSeparator: true},
+					where{kind: whereKindIn, clause: "a in ?", args: []any{1}, orSeparator: true},
 				},
 			},
 			expect: ` WHERE (1=0) OR ("a" IN ($1))`,
-			args:   []interface{}{1},
+			args:   []any{1},
 		},
 
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: "a in ?", args: []interface{}{1}, orSeparator: true}},
+				where: []where{{kind: whereKindIn, clause: "a in ?", args: []any{1}, orSeparator: true}},
 			},
 			expect: ` WHERE ("a" IN ($1))`,
-			args:   []interface{}{1},
+			args:   []any{1},
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: "a in ?", args: []interface{}{1, 2, 3}}},
+				where: []where{{kind: whereKindIn, clause: "a in ?", args: []any{1, 2, 3}}},
 			},
 			expect: ` WHERE ("a" IN ($1,$2,$3))`,
-			args:   []interface{}{1, 2, 3},
+			args:   []any{1, 2, 3},
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: "? in ?", args: []interface{}{1, 2, 3}}},
+				where: []where{{kind: whereKindIn, clause: "? in ?", args: []any{1, 2, 3}}},
 			},
 			expect: " WHERE ($1 IN ($2,$3))",
-			args:   []interface{}{1, 2, 3},
+			args:   []any{1, 2, 3},
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: "( ? , ? ) in ( ? )", orSeparator: true, args: []interface{}{"a", "b", 1, 2, 3, 4}}},
+				where: []where{{kind: whereKindIn, clause: "( ? , ? ) in ( ? )", orSeparator: true, args: []any{"a", "b", 1, 2, 3, 4}}},
 			},
 			expect: " WHERE (( $1 , $2 ) IN ( (($3,$4),($5,$6)) ))",
-			args:   []interface{}{"a", "b", 1, 2, 3, 4},
+			args:   []any{"a", "b", 1, 2, 3, 4},
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: `("a")in(?)`, orSeparator: true, args: []interface{}{1, 2, 3}}},
+				where: []where{{kind: whereKindIn, clause: `("a")in(?)`, orSeparator: true, args: []any{1, 2, 3}}},
 			},
 			expect: ` WHERE (("a") IN (($1,$2,$3)))`,
-			args:   []interface{}{1, 2, 3},
+			args:   []any{1, 2, 3},
 		},
 		{
 			q: Query{
-				where: []where{{kind: whereKindIn, clause: `("a")in?`, args: []interface{}{1}}},
+				where: []where{{kind: whereKindIn, clause: `("a")in?`, args: []any{1}}},
 			},
 			expect: ` WHERE (("a") IN ($1))`,
-			args:   []interface{}{1},
+			args:   []any{1},
 		},
 		{
 			q: Query{
 				where: []where{
-					{clause: "a=?", args: []interface{}{1}},
-					{kind: whereKindIn, clause: `?,?,"name" in ?`, orSeparator: true, args: []interface{}{"c", "d", 3, 4, 5, 6, 7, 8}},
-					{kind: whereKindIn, clause: `?,?,"name" in ?`, orSeparator: true, args: []interface{}{"e", "f", 9, 10, 11, 12, 13, 14}},
+					{clause: "a=?", args: []any{1}},
+					{kind: whereKindIn, clause: `?,?,"name" in ?`, orSeparator: true, args: []any{"c", "d", 3, 4, 5, 6, 7, 8}},
+					{kind: whereKindIn, clause: `?,?,"name" in ?`, orSeparator: true, args: []any{"e", "f", 9, 10, 11, 12, 13, 14}},
 				},
 			},
 			expect: ` WHERE (a=$1) OR ($2,$3,"name" IN (($4,$5,$6),($7,$8,$9))) OR ($10,$11,"name" IN (($12,$13,$14),($15,$16,$17)))`,
-			args:   []interface{}{1, "c", "d", 3, 4, 5, 6, 7, 8, "e", "f", 9, 10, 11, 12, 13, 14},
+			args:   []any{1, "c", "d", 3, 4, 5, 6, 7, 8, "e", "f", 9, 10, 11, 12, 13, 14},
 		},
 		{
 			q: Query{
 				where: []where{
-					{kind: whereKindIn, clause: `("a")in`, args: []interface{}{1}},
-					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []interface{}{1}},
+					{kind: whereKindIn, clause: `("a")in`, args: []any{1}},
+					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []any{1}},
 				},
 			},
 			expect: ` WHERE (("a")in) OR (("a") IN ($1))`,
-			args:   []interface{}{1, 1},
+			args:   []any{1, 1},
 		},
 		{
 			q: Query{
 				where: []where{
-					{kind: whereKindIn, clause: `\?,\? in \?`, args: []interface{}{1}},
-					{kind: whereKindIn, clause: `\?,\?in \?`, orSeparator: true, args: []interface{}{1}},
+					{kind: whereKindIn, clause: `\?,\? in \?`, args: []any{1}},
+					{kind: whereKindIn, clause: `\?,\?in \?`, orSeparator: true, args: []any{1}},
 				},
 			},
 			expect: ` WHERE (?,? IN ?) OR (?,? IN ?)`,
-			args:   []interface{}{1, 1},
+			args:   []any{1, 1},
 		},
 		{
 			q: Query{
 				where: []where{
-					{kind: whereKindIn, clause: `("a")in`, args: []interface{}{1}},
-					{kind: whereKindIn, clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
-					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
+					{kind: whereKindIn, clause: `("a")in`, args: []any{1}},
+					{kind: whereKindIn, clause: `("a") in thing`, args: []any{1, 2, 3}},
+					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []any{4, 5, 6}},
 				},
 			},
 			expect: ` WHERE (("a")in) AND (("a") IN thing) OR (("a") IN ($1,$2,$3))`,
-			args:   []interface{}{1, 1, 2, 3, 4, 5, 6},
+			args:   []any{1, 1, 2, 3, 4, 5, 6},
 		},
 		{
 			q: Query{
 				where: []where{
-					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
-					{kind: whereKindIn, clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
-					{kind: whereKindIn, clause: `("a")in`, args: []interface{}{1}},
+					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []any{4, 5, 6}},
+					{kind: whereKindIn, clause: `("a") in thing`, args: []any{1, 2, 3}},
+					{kind: whereKindIn, clause: `("a")in`, args: []any{1}},
 				},
 			},
 			expect: ` WHERE (("a") IN ($1,$2,$3)) AND (("a") IN thing) AND (("a")in)`,
-			args:   []interface{}{4, 5, 6, 1, 2, 3, 1},
+			args:   []any{4, 5, 6, 1, 2, 3, 1},
 		},
 		{
 			q: Query{
 				where: []where{
-					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []interface{}{4, 5, 6}},
-					{kind: whereKindIn, clause: `("a")in`, args: []interface{}{1}},
-					{kind: whereKindIn, clause: `("a") in thing`, args: []interface{}{1, 2, 3}},
+					{kind: whereKindIn, clause: `("a")in?`, orSeparator: true, args: []any{4, 5, 6}},
+					{kind: whereKindIn, clause: `("a")in`, args: []any{1}},
+					{kind: whereKindIn, clause: `("a") in thing`, args: []any{1, 2, 3}},
 				},
 			},
 			expect: ` WHERE (("a") IN ($1,$2,$3)) AND (("a")in) AND (("a") IN thing)`,
-			args:   []interface{}{4, 5, 6, 1, 1, 2, 3},
+			args:   []any{4, 5, 6, 1, 1, 2, 3},
 		},
 	}
 

@@ -11,8 +11,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 //go:embed override
@@ -133,7 +133,7 @@ func (s SQLiteDriver) Close() {
 // retrieves all table names from sqlite_master
 func (s SQLiteDriver) TableNames(schema string, whitelist, blacklist []string) ([]string, error) {
 	query := `SELECT name FROM sqlite_master WHERE type='table'`
-	args := []interface{}{}
+	args := []any{}
 
 	if len(whitelist) > 0 {
 		tables := drivers.TablesFromList(whitelist)
@@ -180,7 +180,7 @@ func (s SQLiteDriver) TableNames(schema string, whitelist, blacklist []string) (
 // retrieves all view names from sqlite_master
 func (s SQLiteDriver) ViewNames(schema string, whitelist, blacklist []string) ([]string, error) {
 	query := `SELECT name FROM sqlite_master WHERE type='view'`
-	args := []interface{}{}
+	args := []any{}
 
 	if len(whitelist) > 0 {
 		views := drivers.TablesFromList(whitelist)
@@ -529,7 +529,7 @@ func (SQLiteDriver) TranslateColumnType(c drivers.Column) drivers.Column {
 			c.Type = "types.NullDecimal"
 		case "BOOLEAN":
 			c.Type = "null.Bool"
-		case "DATE", "DATETIME":
+		case "DATE", "DATETIME", "TIMESTAMP":
 			c.Type = "null.Time"
 		case "JSON":
 			c.Type = "null.JSON"
@@ -562,7 +562,7 @@ func (SQLiteDriver) TranslateColumnType(c drivers.Column) drivers.Column {
 			c.Type = "types.Decimal"
 		case "BOOLEAN":
 			c.Type = "bool"
-		case "DATE", "DATETIME":
+		case "DATE", "DATETIME", "TIMESTAMP":
 			c.Type = "time.Time"
 		case "JSON":
 			c.Type = "types.JSON"
@@ -590,8 +590,8 @@ func (SQLiteDriver) Imports() (col importers.Collection, err error) {
 				`"strings"`,
 			},
 			ThirdParty: importers.List{
-				`"github.com/volatiletech/strmangle"`,
-				`"github.com/volatiletech/sqlboiler/v4/drivers"`,
+				`"github.com/aarondl/strmangle"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers"`,
 			},
 		},
 	}
@@ -623,69 +623,69 @@ func (SQLiteDriver) Imports() (col importers.Collection, err error) {
 
 	col.BasedOnType = importers.Map{
 		"null.Float32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Float64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Int64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint8": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint16": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint32": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Uint64": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.String": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bool": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Time": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 		"null.Bytes": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 
 		"time.Time": {
 			Standard: importers.List{`"time"`},
 		},
 		"types.Decimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"types.NullDecimal": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 
 		"types.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/sqlboiler/v4/types"`},
+			ThirdParty: importers.List{`"github.com/aarondl/sqlboiler/v4/types"`},
 		},
 		"null.JSON": {
-			ThirdParty: importers.List{`"github.com/volatiletech/null/v8"`},
+			ThirdParty: importers.List{`"github.com/aarondl/null/v8"`},
 		},
 	}
 	return col, err

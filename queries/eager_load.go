@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/sqlboiler/v4/boil"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/aarondl/strmangle"
 )
 
 type loadRelationshipState struct {
@@ -50,7 +50,7 @@ func (l loadRelationshipState) buildKey(depth int) string {
 // obj should be one of:
 // *[]*struct or *struct
 // bkind should reflect what kind of thing it is above
-func eagerLoad(ctx context.Context, exec boil.Executor, toLoad []string, mods map[string]Applicator, obj interface{}, bkind bindKind) error {
+func eagerLoad(ctx context.Context, exec boil.Executor, toLoad []string, mods map[string]Applicator, obj any, bkind bindKind) error {
 	state := loadRelationshipState{
 		ctx:    ctx, // defiant to the end, I know this is frowned upon
 		exec:   exec,
@@ -70,7 +70,7 @@ func eagerLoad(ctx context.Context, exec boil.Executor, toLoad []string, mods ma
 // loadRelationships dynamically calls the template generated eager load
 // functions of the form:
 //
-//   func (t *TableR) LoadRelationshipName(exec Executor, singular bool, obj interface{})
+//   func (t *TableR) LoadRelationshipName(exec Executor, singular bool, obj any)
 //
 // The arguments to this function are:
 //   - t is not considered here, and is always passed nil. The function exists on a loaded
@@ -91,7 +91,7 @@ func eagerLoad(ctx context.Context, exec boil.Executor, toLoad []string, mods ma
 // That's to say that we descend the graph of relationships, and at each level
 // we gather all the things up we want to load into, load them, and then move
 // to the next level of the graph.
-func (l loadRelationshipState) loadRelationships(depth int, obj interface{}, bkind bindKind) error {
+func (l loadRelationshipState) loadRelationships(depth int, obj any, bkind bindKind) error {
 	typ := reflect.TypeOf(obj).Elem()
 	if bkind == kindPtrSliceStruct {
 		typ = typ.Elem().Elem()
@@ -314,7 +314,7 @@ var (
 // of the `from` struct or slice of structs.
 // Expects `to` and `from` to be a pair of pre-allocated **struct or *[]*struct.
 // Returns false if types do not match.
-func SetFromEmbeddedStruct(to interface{}, from interface{}) bool {
+func SetFromEmbeddedStruct(to any, from any) bool {
 	toPtrVal := reflect.ValueOf(to)
 	fromPtrVal := reflect.ValueOf(from)
 	if toPtrVal.Kind() != reflect.Ptr || fromPtrVal.Kind() != reflect.Ptr {
@@ -367,7 +367,7 @@ func SetFromEmbeddedStruct(to interface{}, from interface{}) bool {
 // singularStructType returns singular struct type
 // from **struct or *[]*struct types.
 // Used for Load* methods during binding.
-func singularStructType(obj interface{}) (reflect.Type, bool) {
+func singularStructType(obj any) (reflect.Type, bool) {
 	val := reflect.Indirect(reflect.ValueOf(obj))
 	if val.Kind() == reflect.Interface {
 		val = reflect.ValueOf(val.Interface())

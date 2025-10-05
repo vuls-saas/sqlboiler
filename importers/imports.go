@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/strmangle"
+	"github.com/aarondl/strmangle"
 )
 
 // Collection of imports for various templating purposes
@@ -66,19 +66,19 @@ func (s Set) Format() []byte {
 	return buf.Bytes()
 }
 
-// SetFromInterface creates a set from a theoretical map[string]interface{}.
+// SetFromInterface creates a set from a theoretical map[string]any.
 // This is to load from a loosely defined configuration file.
-func SetFromInterface(intf interface{}) (Set, error) {
+func SetFromInterface(intf any) (Set, error) {
 	s := Set{}
 
-	setIntf, ok := intf.(map[string]interface{})
+	setIntf, ok := intf.(map[string]any)
 	if !ok {
-		return s, errors.New("import set should be map[string]interface{}")
+		return s, errors.New("import set should be map[string]any")
 	}
 
 	standardIntf, ok := setIntf["standard"]
 	if ok {
-		standardsIntf, ok := standardIntf.([]interface{})
+		standardsIntf, ok := standardIntf.([]any)
 		if !ok {
 			return s, errors.New("import set standards must be an slice")
 		}
@@ -95,7 +95,7 @@ func SetFromInterface(intf interface{}) (Set, error) {
 
 	thirdPartyIntf, ok := setIntf["third_party"]
 	if ok {
-		thirdPartysIntf, ok := thirdPartyIntf.([]interface{})
+		thirdPartysIntf, ok := thirdPartyIntf.([]any)
 		if !ok {
 			return s, errors.New("import set third_party must be an slice")
 		}
@@ -118,15 +118,15 @@ func SetFromInterface(intf interface{}) (Set, error) {
 // using forward slash (/).
 type Map map[string]Set
 
-// MapFromInterface creates a Map from a theoretical map[string]interface{}
-// or []map[string]interface{}
+// MapFromInterface creates a Map from a theoretical map[string]any
+// or []map[string]any
 // This is to load from a loosely defined configuration file.
-func MapFromInterface(intf interface{}) (Map, error) {
+func MapFromInterface(intf any) (Map, error) {
 	m := Map{}
 
-	iter := func(i interface{}, fn func(string, interface{}) error) error {
+	iter := func(i any, fn func(string, any) error) error {
 		switch toIter := intf.(type) {
-		case []interface{}:
+		case []any:
 			for _, intf := range toIter {
 				obj := cast.ToStringMap(intf)
 				name := obj["name"].(string)
@@ -134,20 +134,20 @@ func MapFromInterface(intf interface{}) (Map, error) {
 					return err
 				}
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			for k, v := range toIter {
 				if err := fn(k, v); err != nil {
 					return err
 				}
 			}
 		default:
-			panic("import map should be map[string]interface or []map[string]interface{}")
+			panic("import map should be map[string]interface or []map[string]any")
 		}
 
 		return nil
 	}
 
-	err := iter(intf, func(name string, value interface{}) error {
+	err := iter(intf, func(name string, value any) error {
 		s, err := SetFromInterface(value)
 		if err != nil {
 			return err
@@ -201,11 +201,11 @@ func NewDefaultImports() Collection {
 		},
 		ThirdParty: List{
 			`"github.com/friendsofgo/errors"`,
-			`"github.com/volatiletech/sqlboiler/v4/boil"`,
-			`"github.com/volatiletech/sqlboiler/v4/queries"`,
-			`"github.com/volatiletech/sqlboiler/v4/queries/qm"`,
-			`"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"`,
-			`"github.com/volatiletech/strmangle"`,
+			`"github.com/aarondl/sqlboiler/v4/boil"`,
+			`"github.com/aarondl/sqlboiler/v4/queries"`,
+			`"github.com/aarondl/sqlboiler/v4/queries/qm"`,
+			`"github.com/aarondl/sqlboiler/v4/queries/qmhelper"`,
+			`"github.com/aarondl/strmangle"`,
 		},
 	}
 
@@ -215,9 +215,9 @@ func NewDefaultImports() Collection {
 				`"regexp"`,
 			},
 			ThirdParty: List{
-				`"github.com/volatiletech/sqlboiler/v4/drivers"`,
-				`"github.com/volatiletech/sqlboiler/v4/queries"`,
-				`"github.com/volatiletech/sqlboiler/v4/queries/qm"`,
+				`"github.com/aarondl/sqlboiler/v4/drivers"`,
+				`"github.com/aarondl/sqlboiler/v4/queries"`,
+				`"github.com/aarondl/sqlboiler/v4/queries/qm"`,
 			},
 		},
 		"boil_types": {
@@ -226,8 +226,8 @@ func NewDefaultImports() Collection {
 			},
 			ThirdParty: List{
 				`"github.com/friendsofgo/errors"`,
-				`"github.com/volatiletech/sqlboiler/v4/boil"`,
-				`"github.com/volatiletech/strmangle"`,
+				`"github.com/aarondl/sqlboiler/v4/boil"`,
+				`"github.com/aarondl/strmangle"`,
 			},
 		},
 	}
@@ -239,10 +239,10 @@ func NewDefaultImports() Collection {
 			`"testing"`,
 		},
 		ThirdParty: List{
-			`"github.com/volatiletech/sqlboiler/v4/boil"`,
-			`"github.com/volatiletech/sqlboiler/v4/queries"`,
-			`"github.com/volatiletech/randomize"`,
-			`"github.com/volatiletech/strmangle"`,
+			`"github.com/aarondl/sqlboiler/v4/boil"`,
+			`"github.com/aarondl/sqlboiler/v4/queries"`,
+			`"github.com/aarondl/randomize"`,
+			`"github.com/aarondl/strmangle"`,
 		},
 	}
 
@@ -261,7 +261,7 @@ func NewDefaultImports() Collection {
 			},
 			ThirdParty: List{
 				`"github.com/spf13/viper"`,
-				`"github.com/volatiletech/sqlboiler/v4/boil"`,
+				`"github.com/aarondl/sqlboiler/v4/boil"`,
 			},
 		},
 		"boil_queries_test": {
@@ -273,7 +273,7 @@ func NewDefaultImports() Collection {
 				`"regexp"`,
 			},
 			ThirdParty: List{
-				`"github.com/volatiletech/sqlboiler/v4/boil"`,
+				`"github.com/aarondl/sqlboiler/v4/boil"`,
 			},
 		},
 		"boil_suites_test": {
@@ -303,8 +303,8 @@ func NullableEnumImports() Collection {
 				`"encoding/json"`,
 			},
 			ThirdParty: List{
-				`"github.com/volatiletech/null/v8"`,
-				`"github.com/volatiletech/null/v8/convert"`,
+				`"github.com/aarondl/null/v8"`,
+				`"github.com/aarondl/null/v8/convert"`,
 			},
 		},
 	}

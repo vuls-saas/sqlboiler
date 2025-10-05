@@ -3,8 +3,8 @@ package qm
 import (
 	"strings"
 
-	"github.com/volatiletech/sqlboiler/v4/queries"
-	"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"
+	"github.com/aarondl/sqlboiler/v4/queries"
+	"github.com/aarondl/sqlboiler/v4/queries/qmhelper"
 )
 
 // QueryMod modifies a query object.
@@ -44,7 +44,7 @@ func Apply(q *queries.Query, mods ...QueryMod) {
 
 type sqlQueryMod struct {
 	sql  string
-	args []interface{}
+	args []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -53,7 +53,7 @@ func (qm sqlQueryMod) Apply(q *queries.Query) {
 }
 
 // SQL allows you to execute a plain SQL statement
-func SQL(sql string, args ...interface{}) QueryMod {
+func SQL(sql string, args ...any) QueryMod {
 	return sqlQueryMod{
 		sql:  sql,
 		args: args,
@@ -107,7 +107,7 @@ func Load(relationship string, mods ...QueryMod) QueryMod {
 
 type innerJoinQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -116,7 +116,7 @@ func (qm innerJoinQueryMod) Apply(q *queries.Query) {
 }
 
 // InnerJoin on another table
-func InnerJoin(clause string, args ...interface{}) QueryMod {
+func InnerJoin(clause string, args ...any) QueryMod {
 	return innerJoinQueryMod{
 		clause: clause,
 		args:   args,
@@ -125,7 +125,7 @@ func InnerJoin(clause string, args ...interface{}) QueryMod {
 
 type leftOuterJoinQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -134,7 +134,7 @@ func (qm leftOuterJoinQueryMod) Apply(q *queries.Query) {
 }
 
 // LeftOuterJoin on another table
-func LeftOuterJoin(clause string, args ...interface{}) QueryMod {
+func LeftOuterJoin(clause string, args ...any) QueryMod {
 	return leftOuterJoinQueryMod{
 		clause: clause,
 		args:   args,
@@ -143,7 +143,7 @@ func LeftOuterJoin(clause string, args ...interface{}) QueryMod {
 
 type rightOuterJoinQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -152,7 +152,7 @@ func (qm rightOuterJoinQueryMod) Apply(q *queries.Query) {
 }
 
 // RightOuterJoin on another table
-func RightOuterJoin(clause string, args ...interface{}) QueryMod {
+func RightOuterJoin(clause string, args ...any) QueryMod {
 	return rightOuterJoinQueryMod{
 		clause: clause,
 		args:   args,
@@ -161,7 +161,7 @@ func RightOuterJoin(clause string, args ...interface{}) QueryMod {
 
 type fullOuterJoinQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -170,7 +170,7 @@ func (qm fullOuterJoinQueryMod) Apply(q *queries.Query) {
 }
 
 // FullOuterJoin on another table
-func FullOuterJoin(clause string, args ...interface{}) QueryMod {
+func FullOuterJoin(clause string, args ...any) QueryMod {
 	return fullOuterJoinQueryMod{
 		clause: clause,
 		args:   args,
@@ -195,7 +195,7 @@ func Distinct(clause string) QueryMod {
 
 type withQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -204,7 +204,7 @@ func (qm withQueryMod) Apply(q *queries.Query) {
 }
 
 // With allows you to pass in a Common Table Expression clause (and args)
-func With(clause string, args ...interface{}) QueryMod {
+func With(clause string, args ...any) QueryMod {
 	return withQueryMod{
 		clause: clause,
 		args:   args,
@@ -229,7 +229,7 @@ func Select(columns ...string) QueryMod {
 
 // Where allows you to specify a where clause for your statement. If multiple
 // Where statements are used they are combined with 'and'
-func Where(clause string, args ...interface{}) QueryMod {
+func Where(clause string, args ...any) QueryMod {
 	return qmhelper.WhereQueryMod{
 		Clause: clause,
 		Args:   args,
@@ -238,7 +238,7 @@ func Where(clause string, args ...interface{}) QueryMod {
 
 type andQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -252,7 +252,7 @@ func (qm andQueryMod) Apply(q *queries.Query) {
 //
 // Because Where statements are by default combined with and, there's no reason
 // to call this method as it behaves the same as "Where"
-func And(clause string, args ...interface{}) QueryMod {
+func And(clause string, args ...any) QueryMod {
 	return andQueryMod{
 		clause: clause,
 		args:   args,
@@ -261,7 +261,7 @@ func And(clause string, args ...interface{}) QueryMod {
 
 type orQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -271,7 +271,7 @@ func (qm orQueryMod) Apply(q *queries.Query) {
 }
 
 // Or allows you to specify a where clause separated by an OR for your statement
-func Or(clause string, args ...interface{}) QueryMod {
+func Or(clause string, args ...any) QueryMod {
 	return orQueryMod{
 		clause: clause,
 		args:   args,
@@ -297,7 +297,7 @@ func (qm or2QueryMod) Apply(q *queries.Query) {
 // Apply implements QueryMod.Apply.
 type whereInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 func (qm whereInQueryMod) Apply(q *queries.Query) {
@@ -306,7 +306,7 @@ func (qm whereInQueryMod) Apply(q *queries.Query) {
 
 // WhereIn allows you to specify a "x IN (set)" clause for your where statement
 // Example clauses: "column in ?", "(column1,column2) in ?"
-func WhereIn(clause string, args ...interface{}) QueryMod {
+func WhereIn(clause string, args ...any) QueryMod {
 	return whereInQueryMod{
 		clause: clause,
 		args:   args,
@@ -315,7 +315,7 @@ func WhereIn(clause string, args ...interface{}) QueryMod {
 
 type andInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -327,7 +327,7 @@ func (qm andInQueryMod) Apply(q *queries.Query) {
 // for your where statement. AndIn is a duplicate of the WhereIn function, but
 // allows for more natural looking query mod chains, for example:
 // (WhereIn("column1 in ?"), AndIn("column2 in ?"), OrIn("column3 in ?"))
-func AndIn(clause string, args ...interface{}) QueryMod {
+func AndIn(clause string, args ...any) QueryMod {
 	return andInQueryMod{
 		clause: clause,
 		args:   args,
@@ -336,7 +336,7 @@ func AndIn(clause string, args ...interface{}) QueryMod {
 
 type orInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -347,7 +347,7 @@ func (qm orInQueryMod) Apply(q *queries.Query) {
 
 // OrIn allows you to specify an IN clause separated by
 // an OR for your where statement
-func OrIn(clause string, args ...interface{}) QueryMod {
+func OrIn(clause string, args ...any) QueryMod {
 	return orInQueryMod{
 		clause: clause,
 		args:   args,
@@ -356,7 +356,7 @@ func OrIn(clause string, args ...interface{}) QueryMod {
 
 type whereNotInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -367,7 +367,7 @@ func (qm whereNotInQueryMod) Apply(q *queries.Query) {
 // WhereNotIn allows you to specify a "x NOT IN (set)" clause for your where
 // statement. Example clauses: "column not in ?",
 // "(column1,column2) not in ?"
-func WhereNotIn(clause string, args ...interface{}) QueryMod {
+func WhereNotIn(clause string, args ...any) QueryMod {
 	return whereNotInQueryMod{
 		clause: clause,
 		args:   args,
@@ -376,7 +376,7 @@ func WhereNotIn(clause string, args ...interface{}) QueryMod {
 
 type andNotInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -389,7 +389,7 @@ func (qm andNotInQueryMod) Apply(q *queries.Query) {
 // function, but allows for more natural looking query mod chains, for example:
 // (WhereNotIn("column1 not in ?"), AndIn("column2 not in ?"), OrIn("column3 not
 // in ?"))
-func AndNotIn(clause string, args ...interface{}) QueryMod {
+func AndNotIn(clause string, args ...any) QueryMod {
 	return andNotInQueryMod{
 		clause: clause,
 		args:   args,
@@ -398,7 +398,7 @@ func AndNotIn(clause string, args ...interface{}) QueryMod {
 
 type orNotInQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -409,7 +409,7 @@ func (qm orNotInQueryMod) Apply(q *queries.Query) {
 
 // OrNotIn allows you to specify a NOT IN clause separated by
 // an OR for your where statement
-func OrNotIn(clause string, args ...interface{}) QueryMod {
+func OrNotIn(clause string, args ...any) QueryMod {
 	return orNotInQueryMod{
 		clause: clause,
 		args:   args,
@@ -458,7 +458,7 @@ func GroupBy(clause string) QueryMod {
 
 type orderByQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -467,7 +467,7 @@ func (qm orderByQueryMod) Apply(q *queries.Query) {
 }
 
 // OrderBy allows you to specify a order by clause for your statement
-func OrderBy(clause string, args ...interface{}) QueryMod {
+func OrderBy(clause string, args ...any) QueryMod {
 	return orderByQueryMod{
 		clause: clause,
 		args:   args,
@@ -476,7 +476,7 @@ func OrderBy(clause string, args ...interface{}) QueryMod {
 
 type havingQueryMod struct {
 	clause string
-	args   []interface{}
+	args   []any
 }
 
 // Apply implements QueryMod.Apply.
@@ -485,7 +485,7 @@ func (qm havingQueryMod) Apply(q *queries.Query) {
 }
 
 // Having allows you to specify a having clause for your statement
-func Having(clause string, args ...interface{}) QueryMod {
+func Having(clause string, args ...any) QueryMod {
 	return havingQueryMod{
 		clause: clause,
 		args:   args,

@@ -138,7 +138,7 @@ func (o *{{$alias.UpSingular}}) Insert({{if .NoContext}}exec boil.Executor{{else
 	{{if $canLastInsertID -}}
 	var lastID int64
 	{{- end}}
-	var identifierCols []interface{}
+	var identifierCols []any
 
 	if len(cache.retMapping) == 0 {
 		goto CacheNoHooks
@@ -158,7 +158,7 @@ func (o *{{$alias.UpSingular}}) Insert({{if .NoContext}}exec boil.Executor{{else
 	}
 	{{- end}}
 
-	identifierCols = []interface{}{
+	identifierCols = []any{
 		{{range .Table.PKey.Columns -}}
 		o.{{$alias.Column .}},
 		{{end -}}

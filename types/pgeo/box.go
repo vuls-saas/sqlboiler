@@ -15,7 +15,7 @@ func (b Box) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (b *Box) Scan(src interface{}) error {
+func (b *Box) Scan(src any) error {
 	return scanBox(b, src)
 }
 
@@ -23,7 +23,7 @@ func valueBox(b Box) (driver.Value, error) {
 	return fmt.Sprintf(`(%s)`, formatPoints(b[:])), nil
 }
 
-func scanBox(b *Box, src interface{}) error {
+func scanBox(b *Box, src any) error {
 	if src == nil {
 		*b = NewBox(Point{}, Point{})
 		return nil

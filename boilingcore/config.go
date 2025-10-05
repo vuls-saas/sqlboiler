@@ -10,8 +10,8 @@ import (
 	"github.com/friendsofgo/errors"
 	"github.com/spf13/cast"
 
-	"github.com/volatiletech/sqlboiler/v4/drivers"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 type TagCase string
@@ -28,27 +28,29 @@ type Config struct {
 	DriverName   string         `toml:"driver_name,omitempty" json:"driver_name,omitempty"`
 	DriverConfig drivers.Config `toml:"driver_config,omitempty" json:"driver_config,omitempty"`
 
-	PkgName           string   `toml:"pkg_name,omitempty" json:"pkg_name,omitempty"`
-	OutFolder         string   `toml:"out_folder,omitempty" json:"out_folder,omitempty"`
-	TemplateDirs      []string `toml:"template_dirs,omitempty" json:"template_dirs,omitempty"`
-	Tags              []string `toml:"tags,omitempty" json:"tags,omitempty"`
-	Replacements      []string `toml:"replacements,omitempty" json:"replacements,omitempty"`
-	Debug             bool     `toml:"debug,omitempty" json:"debug,omitempty"`
-	AddGlobal         bool     `toml:"add_global,omitempty" json:"add_global,omitempty"`
-	AddPanic          bool     `toml:"add_panic,omitempty" json:"add_panic,omitempty"`
-	AddSoftDeletes    bool     `toml:"add_soft_deletes,omitempty" json:"add_soft_deletes,omitempty"`
-	AddEnumTypes      bool     `toml:"add_enum_types,omitempty" json:"add_enum_types,omitempty"`
-	EnumNullPrefix    string   `toml:"enum_null_prefix,omitempty" json:"enum_null_prefix,omitempty"`
-	AddStrictUpsert   bool     `toml:"add_strict_upsert,omitempty" json:"add_strict_upsert,omitempty"`
-	NoContext         bool     `toml:"no_context,omitempty" json:"no_context,omitempty"`
-	NoTests           bool     `toml:"no_tests,omitempty" json:"no_tests,omitempty"`
-	NoHooks           bool     `toml:"no_hooks,omitempty" json:"no_hooks,omitempty"`
-	NoAutoTimestamps  bool     `toml:"no_auto_timestamps,omitempty" json:"no_auto_timestamps,omitempty"`
-	NoRowsAffected    bool     `toml:"no_rows_affected,omitempty" json:"no_rows_affected,omitempty"`
-	NoDriverTemplates bool     `toml:"no_driver_templates,omitempty" json:"no_driver_templates,omitempty"`
-	NoBackReferencing bool     `toml:"no_back_reference,omitempty" json:"no_back_reference,omitempty"`
-	AlwaysWrapErrors  bool     `toml:"always_wrap_errors,omitempty" json:"always_wrap_errors,omitempty"`
-	Wipe              bool     `toml:"wipe,omitempty" json:"wipe,omitempty"`
+	PkgName               string   `toml:"pkg_name,omitempty" json:"pkg_name,omitempty"`
+	OutFolder             string   `toml:"out_folder,omitempty" json:"out_folder,omitempty"`
+	TemplateDirs          []string `toml:"template_dirs,omitempty" json:"template_dirs,omitempty"`
+	Tags                  []string `toml:"tags,omitempty" json:"tags,omitempty"`
+	Replacements          []string `toml:"replacements,omitempty" json:"replacements,omitempty"`
+	Debug                 bool     `toml:"debug,omitempty" json:"debug,omitempty"`
+	AddGlobal             bool     `toml:"add_global,omitempty" json:"add_global,omitempty"`
+	AddPanic              bool     `toml:"add_panic,omitempty" json:"add_panic,omitempty"`
+	AddSoftDeletes        bool     `toml:"add_soft_deletes,omitempty" json:"add_soft_deletes,omitempty"`
+	AddEnumTypes          bool     `toml:"add_enum_types,omitempty" json:"add_enum_types,omitempty"`
+	SkipReplacedEnumTypes bool     `toml:"skip_replaced_enum_types,omitempty" json:"skip_replaced_enum_types,omitempty"`
+	EnumNullPrefix        string   `toml:"enum_null_prefix,omitempty" json:"enum_null_prefix,omitempty"`
+	AddStrictUpsert       bool     `toml:"add_strict_upsert,omitempty" json:"add_strict_upsert,omitempty"`
+	NoContext             bool     `toml:"no_context,omitempty" json:"no_context,omitempty"`
+	NoTests               bool     `toml:"no_tests,omitempty" json:"no_tests,omitempty"`
+	NoHooks               bool     `toml:"no_hooks,omitempty" json:"no_hooks,omitempty"`
+	NoAutoTimestamps      bool     `toml:"no_auto_timestamps,omitempty" json:"no_auto_timestamps,omitempty"`
+	NoRowsAffected        bool     `toml:"no_rows_affected,omitempty" json:"no_rows_affected,omitempty"`
+	NoDriverTemplates     bool     `toml:"no_driver_templates,omitempty" json:"no_driver_templates,omitempty"`
+	NoBackReferencing     bool     `toml:"no_back_reference,omitempty" json:"no_back_reference,omitempty"`
+	NoRelationGetters     bool     `toml:"no_relation_getters,omitempty" json:"no_relation_getters,omitempty"`
+	AlwaysWrapErrors      bool     `toml:"always_wrap_errors,omitempty" json:"always_wrap_errors,omitempty"`
+	Wipe                  bool     `toml:"wipe,omitempty" json:"wipe,omitempty"`
 
 	StructTagCases StructTagCases `toml:"struct_tag_cases,omitempty" json:"struct_tag_cases,omitempty"`
 
@@ -62,6 +64,8 @@ type Config struct {
 
 	Imports importers.Collection `toml:"imports,omitempty" json:"imports,omitempty"`
 
+	DiscardedEnumTypes []string
+
 	DefaultTemplates    fs.FS            `toml:"-" json:"-"`
 	CustomTemplateFuncs template.FuncMap `toml:"-" json:"-"`
 
@@ -70,6 +74,8 @@ type Config struct {
 	AutoColumns  AutoColumns          `toml:"auto_columns,omitempty" json:"auto_columns,omitempty"`
 	Inflections  Inflections          `toml:"inflections,omitempty" json:"inflections,omitempty"`
 	ForeignKeys  []drivers.ForeignKey `toml:"foreign_keys,omitempty" json:"foreign_keys,omitempty" `
+
+	StrictVerifyModVersion bool `toml:"strict_verify_mod_version,omitempty" json:"strict_verify_mod_version"`
 
 	Version string `toml:"version" json:"version"`
 }
@@ -139,7 +145,7 @@ func (c *Config) OutputDirDepth() int {
 //	  name    = "fkey_name"
 //	  local   = "x"
 //	  foreign = "y"
-func ConvertAliases(i interface{}) (a Aliases) {
+func ConvertAliases(i any) (a Aliases) {
 	if i == nil {
 		return a
 	}
@@ -148,7 +154,7 @@ func ConvertAliases(i interface{}) (a Aliases) {
 
 	tablesIntf := topLevel["tables"]
 
-	iterateMapOrSlice(tablesIntf, func(name string, tIntf interface{}) {
+	iterateMapOrSlice(tablesIntf, func(name string, tIntf any) {
 		if a.Tables == nil {
 			a.Tables = make(map[string]TableAlias)
 		}
@@ -176,10 +182,10 @@ func ConvertAliases(i interface{}) (a Aliases) {
 		if colsIntf, ok := t["columns"]; ok {
 			ta.Columns = make(map[string]string)
 
-			iterateMapOrSlice(colsIntf, func(name string, colIntf interface{}) {
+			iterateMapOrSlice(colsIntf, func(name string, colIntf any) {
 				var alias string
 				switch col := colIntf.(type) {
-				case map[string]interface{}, map[interface{}]interface{}:
+				case map[string]any, map[any]any:
 					cmap := cast.ToStringMap(colIntf)
 					alias = cmap["alias"].(string)
 				case string:
@@ -191,7 +197,7 @@ func ConvertAliases(i interface{}) (a Aliases) {
 
 		relationshipsIntf, ok := t["relationships"]
 		if ok {
-			iterateMapOrSlice(relationshipsIntf, func(name string, rIntf interface{}) {
+			iterateMapOrSlice(relationshipsIntf, func(name string, rIntf any) {
 				if ta.Relationships == nil {
 					ta.Relationships = make(map[string]RelationshipAlias)
 				}
@@ -216,14 +222,14 @@ func ConvertAliases(i interface{}) (a Aliases) {
 	return a
 }
 
-func iterateMapOrSlice(mapOrSlice interface{}, fn func(name string, obj interface{})) {
+func iterateMapOrSlice(mapOrSlice any, fn func(name string, obj any)) {
 	switch t := mapOrSlice.(type) {
-	case map[string]interface{}, map[interface{}]interface{}:
+	case map[string]any, map[any]any:
 		tmap := cast.ToStringMap(mapOrSlice)
 		for name, table := range tmap {
 			fn(name, table)
 		}
-	case []interface{}:
+	case []any:
 		for _, intf := range t {
 			obj := cast.ToStringMap(intf)
 			name := obj["name"].(string)
@@ -233,12 +239,12 @@ func iterateMapOrSlice(mapOrSlice interface{}, fn func(name string, obj interfac
 }
 
 // ConvertTypeReplace is necessary because viper
-func ConvertTypeReplace(i interface{}) []TypeReplace {
+func ConvertTypeReplace(i any) []TypeReplace {
 	if i == nil {
 		return nil
 	}
 
-	intfArray := i.([]interface{})
+	intfArray := i.([]any)
 	var replaces []TypeReplace
 	for _, r := range intfArray {
 		replaceIntf := cast.ToStringMap(r)
@@ -268,7 +274,7 @@ func ConvertTypeReplace(i interface{}) []TypeReplace {
 	return replaces
 }
 
-func tablesOfTypeReplace(i interface{}) []string {
+func tablesOfTypeReplace(i any) []string {
 	tables := []string{}
 
 	m := cast.ToStringMap(i)
@@ -279,7 +285,7 @@ func tablesOfTypeReplace(i interface{}) []string {
 	return tables
 }
 
-func columnFromInterface(i interface{}) (col drivers.Column) {
+func columnFromInterface(i any) (col drivers.Column) {
 	m := cast.ToStringMap(i)
 	if s := m["name"]; s != nil {
 		col.Name = s.(string)
@@ -333,12 +339,12 @@ func columnFromInterface(i interface{}) (col drivers.Column) {
 //	column = "column_name"
 //	foreign_table = "foreign_table_name"
 //	foreign_column = "foreign_column_name"
-func ConvertForeignKeys(i interface{}) (fks []drivers.ForeignKey) {
+func ConvertForeignKeys(i any) (fks []drivers.ForeignKey) {
 	if i == nil {
 		return nil
 	}
 
-	iterateMapOrSlice(i, func(name string, obj interface{}) {
+	iterateMapOrSlice(i, func(name string, obj any) {
 		t := cast.ToStringMap(obj)
 
 		fk := drivers.ForeignKey{

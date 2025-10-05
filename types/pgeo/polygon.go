@@ -15,7 +15,7 @@ func (p Polygon) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (p *Polygon) Scan(src interface{}) error {
+func (p *Polygon) Scan(src any) error {
 	return scanPolygon(p, src)
 }
 
@@ -23,7 +23,7 @@ func valuePolygon(p Polygon) (driver.Value, error) {
 	return fmt.Sprintf(`(%s)`, formatPoints(p[:])), nil
 }
 
-func scanPolygon(p *Polygon, src interface{}) error {
+func scanPolygon(p *Polygon, src any) error {
 	if src == nil {
 		return nil
 	}

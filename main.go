@@ -11,12 +11,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/volatiletech/sqlboiler/v4/boilingcore"
-	"github.com/volatiletech/sqlboiler/v4/drivers"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/boilingcore"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
-const sqlBoilerVersion = "4.16.2"
+const sqlBoilerVersion = "4.19.5"
 
 var (
 	flagConfigFile string
@@ -75,7 +75,7 @@ func main() {
 		Use:   "sqlboiler [flags] <driver>",
 		Short: "SQL Boiler generates an ORM tailored to your database schema.",
 		Long: "SQL Boiler generates a Go ORM from template files, tailored to your database schema.\n" +
-			`Complete documentation is available at http://github.com/volatiletech/sqlboiler`,
+			`Complete documentation is available at http://github.com/aarondl/sqlboiler`,
 		Example:       `sqlboiler psql`,
 		PreRunE:       preRun,
 		RunE:          run,
@@ -101,11 +101,14 @@ func main() {
 	rootCmd.PersistentFlags().BoolP("no-auto-timestamps", "", false, "Disable automatic timestamps for created_at/updated_at")
 	rootCmd.PersistentFlags().BoolP("no-driver-templates", "", false, "Disable parsing of templates defined by the database driver")
 	rootCmd.PersistentFlags().BoolP("no-back-referencing", "", false, "Disable back referencing in the loaded relationship structs")
+	rootCmd.PersistentFlags().BoolP("no-schema", "", false, "Disable generating a schema in the output")
+	rootCmd.PersistentFlags().BoolP("no-relation-getters", "", false, "Disable generating getters for relationship tables")
 	rootCmd.PersistentFlags().BoolP("always-wrap-errors", "", false, "Wrap all returned errors with stacktraces, also sql.ErrNoRows")
 	rootCmd.PersistentFlags().BoolP("add-global-variants", "", false, "Enable generation for global variants")
 	rootCmd.PersistentFlags().BoolP("add-panic-variants", "", false, "Enable generation for panic variants")
 	rootCmd.PersistentFlags().BoolP("add-soft-deletes", "", false, "Enable soft deletion by updating deleted_at timestamp")
 	rootCmd.PersistentFlags().BoolP("add-enum-types", "", false, "Enable generation of types for enums")
+	rootCmd.PersistentFlags().BoolP("skip-replaced-enum-types", "", true, "Prevents the generation of unused enum types")
 	rootCmd.PersistentFlags().StringP("enum-null-prefix", "", "Null", "Name prefix of nullable enum types")
 	rootCmd.PersistentFlags().BoolP("add-strict-upsert", "", false, "Enable generation for strict upsert")
 	rootCmd.PersistentFlags().BoolP("version", "", false, "Print the version")
@@ -113,6 +116,7 @@ func main() {
 	rootCmd.PersistentFlags().StringP("struct-tag-casing", "", "snake", "Decides the casing for go structure tag names. camel, title or snake (default snake)")
 	rootCmd.PersistentFlags().StringP("relation-tag", "r", "-", "Relationship struct tag name")
 	rootCmd.PersistentFlags().StringSliceP("tag-ignore", "", nil, "List of column names that should have tags values set to '-' (ignored during parsing)")
+	rootCmd.PersistentFlags().BoolP("strict-verify-mod-version", "", false, "Prevent code generation, if project version of sqlboiler not match with executable")
 
 	// hide flags not recommended for use
 	rootCmd.PersistentFlags().MarkHidden("replace")
@@ -154,26 +158,27 @@ func preRun(cmd *cobra.Command, args []string) error {
 	}
 
 	cmdConfig = &boilingcore.Config{
-		DriverName:        driverName,
-		OutFolder:         viper.GetString("output"),
-		PkgName:           viper.GetString("pkgname"),
-		Debug:             viper.GetBool("debug"),
-		AddGlobal:         viper.GetBool("add-global-variants"),
-		AddPanic:          viper.GetBool("add-panic-variants"),
-		AddSoftDeletes:    viper.GetBool("add-soft-deletes"),
-		AddEnumTypes:      viper.GetBool("add-enum-types"),
-		EnumNullPrefix:    viper.GetString("enum-null-prefix"),
-		AddStrictUpsert:   viper.GetBool("add-strict-upsert"),
-		NoContext:         viper.GetBool("no-context"),
-		NoTests:           viper.GetBool("no-tests"),
-		NoHooks:           viper.GetBool("no-hooks"),
-		NoRowsAffected:    viper.GetBool("no-rows-affected"),
-		NoAutoTimestamps:  viper.GetBool("no-auto-timestamps"),
-		NoDriverTemplates: viper.GetBool("no-driver-templates"),
-		NoBackReferencing: viper.GetBool("no-back-referencing"),
-		AlwaysWrapErrors:  viper.GetBool("always-wrap-errors"),
-		Wipe:              viper.GetBool("wipe"),
-		StructTagCasing:   strings.ToLower(viper.GetString("struct-tag-casing")), // camel | snake | title
+		DriverName:            driverName,
+		OutFolder:             viper.GetString("output"),
+		PkgName:               viper.GetString("pkgname"),
+		Debug:                 viper.GetBool("debug"),
+		AddGlobal:             viper.GetBool("add-global-variants"),
+		AddPanic:              viper.GetBool("add-panic-variants"),
+		AddSoftDeletes:        viper.GetBool("add-soft-deletes"),
+		SkipReplacedEnumTypes: viper.GetBool("skip-replaced-enum-types"),
+		AddEnumTypes:          viper.GetBool("add-enum-types"),
+		EnumNullPrefix:        viper.GetString("enum-null-prefix"),
+		AddStrictUpsert:       viper.GetBool("add-strict-upsert"),
+		NoContext:             viper.GetBool("no-context"),
+		NoTests:               viper.GetBool("no-tests"),
+		NoHooks:               viper.GetBool("no-hooks"),
+		NoRowsAffected:        viper.GetBool("no-rows-affected"),
+		NoAutoTimestamps:      viper.GetBool("no-auto-timestamps"),
+		NoDriverTemplates:     viper.GetBool("no-driver-templates"),
+		NoBackReferencing:     viper.GetBool("no-back-referencing"),
+		AlwaysWrapErrors:      viper.GetBool("always-wrap-errors"),
+		Wipe:                  viper.GetBool("wipe"),
+		StructTagCasing:       strings.ToLower(viper.GetString("struct-tag-casing")), // camel | snake | title
 		StructTagCases: boilingcore.StructTagCases{
 			// make this compatible with the legacy struct-tag-casing config
 			Json: withDefaultCase(viper.GetString("struct-tag-cases.json"), viper.GetString("struct-tag-casing")),
@@ -200,7 +205,8 @@ func preRun(cmd *cobra.Command, args []string) error {
 			SingularExact: viper.GetStringMapString("inflections.singular_exact"),
 			Irregular:     viper.GetStringMapString("inflections.irregular"),
 		},
-		ForeignKeys: boilingcore.ConvertForeignKeys(viper.Get("foreign_keys")),
+		ForeignKeys:            boilingcore.ConvertForeignKeys(viper.Get("foreign_keys")),
+		StrictVerifyModVersion: viper.GetBool("strict-verify-mod-version"),
 
 		Version: sqlBoilerVersion,
 	}
@@ -210,12 +216,13 @@ func preRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Configure the driver
-	cmdConfig.DriverConfig = map[string]interface{}{
-		"whitelist":        viper.GetStringSlice(driverName + ".whitelist"),
-		"blacklist":        viper.GetStringSlice(driverName + ".blacklist"),
-		"add-enum-types":   cmdConfig.AddEnumTypes,
-		"enum-null-prefix": cmdConfig.EnumNullPrefix,
-		"foreign-keys":     cmdConfig.ForeignKeys,
+	cmdConfig.DriverConfig = map[string]any{
+		"whitelist":                  viper.GetStringSlice(driverName + ".whitelist"),
+		"blacklist":                  viper.GetStringSlice(driverName + ".blacklist"),
+		drivers.ConfigNoOutputSchema: viper.GetBool("no-schema"),
+		"add-enum-types":             cmdConfig.AddEnumTypes,
+		"enum-null-prefix":           cmdConfig.EnumNullPrefix,
+		"foreign-keys":               cmdConfig.ForeignKeys,
 	}
 
 	keys := allKeys(driverName)
@@ -227,6 +234,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	}
 
 	cmdConfig.Imports = configureImports()
+	cmdConfig.DiscardedEnumTypes = make([]string, 0, 1)
 
 	cmdState, err = boilingcore.New(cmdConfig)
 	return err

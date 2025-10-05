@@ -3,10 +3,14 @@
 
 // {{$alias.UpSingular}} is an object representing the database table.
 type {{$alias.UpSingular}} struct {
-	{{- range $column := .Table.Columns -}}
+	{{- range $index, $column := .Table.Columns -}}
 	{{- $colAlias := $alias.Column $column.Name -}}
 	{{- $orig_col_name := $column.Name -}}
-	{{- range $column.Comment | splitLines -}} // {{ . }}
+	{{- range $column.Comment | splitLines -}} 
+	{{- if eq $index 0 -}}
+	{{ "\n" }}
+	{{- end -}}
+	// {{ . }}
 	{{ end -}}
 
 	{{if ignore $orig_tbl_name $orig_col_name $.TagIgnore -}}
@@ -87,17 +91,18 @@ func (w {{$name}}) GTE(x {{.Type}}) qm.QueryMod { return qmhelper.Where(w.field,
 func (w {{$name}}) LIKE(x {{.Type}}) qm.QueryMod { return qm.Where(w.field+" LIKE ?", x) }
 func (w {{$name}}) NLIKE(x {{.Type}}) qm.QueryMod { return qm.Where(w.field+" NOT LIKE ?", x) }
 			{{- block "where_ilike_override" . }}{{- end}}
+			{{- block "where_similarto_override" . }}{{- end}}
 		{{end -}}
 		{{if or (isPrimitive .Type) (isNullPrimitive .Type) (isEnumDBType .DBType) -}}
 func (w {{$name}}) IN(slice []{{convertNullToPrimitive .Type}}) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
+	values := make([]any, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
 func (w {{$name}}) NIN(slice []{{convertNullToPrimitive .Type}}) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
+	values := make([]any, 0, len(slice))
 	for _, value := range slice {
 	  values = append(values, value)
 	}
@@ -192,11 +197,25 @@ func (*{{$alias.DownSingular}}R) NewStruct() *{{$alias.DownSingular}}R {
 {{range .Table.FKeys -}}
 {{- $ftable := $.Aliases.Table .ForeignTable -}}
 {{- $relAlias := $alias.Relationship .Name -}}
+
+{{- if not $.NoRelationGetters}}
+
+func (o *{{$alias.UpSingular}}) Get{{$relAlias.Foreign}}() *{{$ftable.UpSingular}} {
+	if (o == nil) {
+		return nil
+	}
+
+	return o.R.Get{{$relAlias.Foreign}}()
+}
+
+{{end -}}
+
 func (r *{{$alias.DownSingular}}R) Get{{$relAlias.Foreign}}() *{{$ftable.UpSingular}} {
 	if (r == nil) {
-    return nil
+		return nil
 	}
-  return r.{{$relAlias.Foreign}}
+
+	return r.{{$relAlias.Foreign}}
 }
 
 {{end -}}
@@ -204,11 +223,25 @@ func (r *{{$alias.DownSingular}}R) Get{{$relAlias.Foreign}}() *{{$ftable.UpSingu
 {{- range .Table.ToOneRelationships -}}
 {{- $ftable := $.Aliases.Table .ForeignTable -}}
 {{- $relAlias := $ftable.Relationship .Name -}}
+
+{{- if not $.NoRelationGetters}}
+
+func (o *{{$alias.UpSingular}}) Get{{$relAlias.Local}}() *{{$ftable.UpSingular}} {
+	if (o == nil) {
+		return nil
+	}
+
+	return o.R.Get{{$relAlias.Local}}()
+}
+
+{{end -}}
+
 func (r *{{$alias.DownSingular}}R) Get{{$relAlias.Local}}() *{{$ftable.UpSingular}} {
 	if (r == nil) {
-    return nil
+		return nil
 	}
-  return r.{{$relAlias.Local}}
+
+	return r.{{$relAlias.Local}}
 }
 
 {{end -}}
@@ -216,11 +249,25 @@ func (r *{{$alias.DownSingular}}R) Get{{$relAlias.Local}}() *{{$ftable.UpSingula
 {{- range .Table.ToManyRelationships -}}
 {{- $ftable := $.Aliases.Table .ForeignTable -}}
 {{- $relAlias := $.Aliases.ManyRelationship .ForeignTable .Name .JoinTable .JoinLocalFKeyName -}}
+
+{{- if not $.NoRelationGetters}}
+
+func (o *{{$alias.UpSingular}}) Get{{$relAlias.Local}}() {{printf "%sSlice" $ftable.UpSingular}} {
+	if (o == nil) {
+		return nil
+	}
+
+	return o.R.Get{{$relAlias.Local}}()
+}
+
+{{end -}}
+
 func (r *{{$alias.DownSingular}}R) Get{{$relAlias.Local}}() {{printf "%sSlice" $ftable.UpSingular}} {
 	if (r == nil) {
-    return nil
+		return nil
 	}
-  return r.{{$relAlias.Local}}
+
+	return r.{{$relAlias.Local}}
 }
 
 {{end -}}

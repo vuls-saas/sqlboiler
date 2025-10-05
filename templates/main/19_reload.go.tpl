@@ -92,7 +92,7 @@ func (o *{{$alias.UpSingular}}Slice) ReloadAll({{if .NoContext}}exec boil.Execut
 	}
 
 	slice := {{$alias.UpSingular}}Slice{}
-	var args []interface{}
+	var args []any
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), {{$alias.DownSingular}}PrimaryKeyMapping)
 		args = append(args, pkeyArgs...)

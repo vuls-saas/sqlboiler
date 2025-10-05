@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	"github.com/aarondl/null/v8"
+	"github.com/aarondl/sqlboiler/v4/drivers"
+	"github.com/aarondl/sqlboiler/v4/types"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
@@ -181,6 +182,57 @@ func TestBindPtrSlice(t *testing.T) {
 	}
 }
 
+func TestBindJsonSlice(t *testing.T) {
+	t.Parallel()
+
+	type siteInfoItem struct {
+		ID     int        `boil:"id"   json:"id"   toml:"id"   yaml:"id"`
+		Fields types.JSON `boil:"test" json:"test" toml:"test" yaml:"test"`
+	}
+
+	query := &Query{
+		from:    []string{"fun"},
+		dialect: &drivers.Dialect{LQ: '"', RQ: '"', UseIndexPlaceholders: true},
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret := sqlmock.NewRows([]string{"id", "test"})
+	ret.AddRow(driver.Value(int64(35)), driver.Value(`{"foo": "bar"}`))
+	ret.AddRow(driver.Value(int64(12)), driver.Value("{}"))
+	mock.ExpectQuery(`SELECT \* FROM "fun";`).WillReturnRows(ret)
+
+	var testResults []siteInfoItem
+	err = query.Bind(nil, db, &testResults)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(testResults) != 2 {
+		t.Fatal("wrong number of results:", len(testResults))
+	}
+	if id := testResults[0].ID; id != 35 {
+		t.Error("wrong ID:", id)
+	}
+	if name := testResults[0].Fields; name.String() != `{"foo": "bar"}` {
+		t.Error("wrong name:", name)
+	}
+
+	if id := testResults[1].ID; id != 12 {
+		t.Error("wrong ID:", id)
+	}
+	if name := testResults[1].Fields; name.String() != "{}" {
+		t.Error("wrong name:", name)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
+	}
+}
+
 func testMakeMapping(byt ...byte) uint64 {
 	var x uint64
 	for i, b := range byt {
@@ -303,7 +355,7 @@ func TestValuesFromMapping(t *testing.T) {
 	if got := v[3].(int); got != 0 {
 		t.Error("nested pointer was wrong:", got)
 	}
-	if got := *v[4].(*interface{}); got != nil {
+	if got := *v[4].(*any); got != nil {
 		t.Error("nil pointer was not be ignored:", got)
 	}
 }
@@ -403,7 +455,7 @@ func TestBindChecks(t *testing.T) {
 	tests := []struct {
 		BKind bindKind
 		Fail  bool
-		Obj   interface{}
+		Obj   any
 	}{
 		{BKind: kindStruct, Fail: false, Obj: &useless{}},
 		{BKind: kindSliceStruct, Fail: false, Obj: &[]useless{}},
@@ -593,8 +645,8 @@ func TestEqual(t *testing.T) {
 	now := time.Now()
 
 	tests := []struct {
-		A    interface{}
-		B    interface{}
+		A    any
+		B    any
 		Want bool
 	}{
 		{A: int(5), B: int(5), Want: true},
@@ -747,7 +799,7 @@ type nullTime struct {
 	Valid bool
 }
 
-func (t *nullTime) Scan(value interface{}) error {
+func (t *nullTime) Scan(value any) error {
 	var err error
 	switch x := value.(type) {
 	case time.Time:

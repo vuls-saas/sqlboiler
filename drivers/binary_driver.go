@@ -8,7 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/sqlboiler/v4/importers"
+	"github.com/aarondl/sqlboiler/v4/importers"
 )
 
 type binaryDriver string
@@ -48,7 +48,7 @@ func (b binaryDriver) Imports() (col importers.Collection, err error) {
 	return col, nil
 }
 
-func execute(executable, method string, input interface{}, output interface{}, errStream io.Writer) error {
+func execute(executable, method string, input any, output any, errStream io.Writer) error {
 	var err error
 	var inputBytes []byte
 	if input != nil {

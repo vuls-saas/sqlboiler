@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func iToS(src interface{}) (string, error) {
+func iToS(src any) (string, error) {
 	var val string
 	var err error
 
@@ -91,7 +91,7 @@ func parsePoints(pts string) ([]Point, error) {
 	return points, nil
 }
 
-func parsePointsSrc(src interface{}) ([]Point, error) {
+func parsePointsSrc(src any) ([]Point, error) {
 	val, err := iToS(src)
 	if err != nil {
 		return []Point{}, err

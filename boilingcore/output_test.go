@@ -19,10 +19,6 @@ func (NopWriteCloser) Close() error {
 	return nil
 }
 
-func nopCloser(w io.Writer) io.WriteCloser {
-	return NopWriteCloser{w}
-}
-
 func TestWriteFile(t *testing.T) {
 	// t.Parallel() cannot be used
 
@@ -122,6 +118,12 @@ func TestGetOutputFilename(t *testing.T) {
 			IsGo:      true,
 			Expected:  "hello",
 		},
+		"contains_forward_slash": {
+			TableName: "slash/test",
+			IsTest:    false,
+			IsGo:      true,
+			Expected:  "slash_test_model",
+		},
 		"begins with underscore": {
 			TableName: "_hello",
 			IsTest:    false,
@@ -164,12 +166,12 @@ func TestGetOutputFilename(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			notTest := getOutputFilename(tc.TableName, false, tc.IsGo)
 			if diff := cmp.Diff(tc.Expected, notTest); diff != "" {
-				t.Fatalf(diff)
+				t.Fatal(diff)
 			}
 
 			isTest := getOutputFilename(tc.TableName, true, tc.IsGo)
 			if diff := cmp.Diff(tc.Expected+"_test", isTest); diff != "" {
-				t.Fatalf(diff)
+				t.Fatal(diff)
 			}
 		})
 	}

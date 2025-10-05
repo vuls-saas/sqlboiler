@@ -20,7 +20,7 @@ func (p NullPath) Value() (driver.Value, error) {
 }
 
 // Scan from sql query
-func (p *NullPath) Scan(src interface{}) error {
+func (p *NullPath) Scan(src any) error {
 	if src == nil {
 		p.Path, p.Valid = NewPath([]Point{Point{}, Point{}}, false), false
 		return nil

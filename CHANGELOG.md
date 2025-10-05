@@ -4,6 +4,83 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Do not treat columns with partial unique indexes as unique in psql driver.
+
+## [4.19.1] - 2025-05-20
+
+### Fixed
+
+- Fix performance issue in `v4.19.0` by reverting the cleanup of unused imports.
+- Updated minimum required Go version to 1.23.
+- Updated dependencies to fix CVEs.
+
+## [4.19.0] - 2025-05-09
+
+### Added
+
+- Add relation getters on base model structs. (thanks @parnic)
+- Added `--no-relation-getters` option to prevent generation relation getters on the main structs. (thanks @parnic)
+- Add Query, Exec, and Bind helpers to the global executor. (thanks @parnic)
+  - BindGP
+  - QueryRowG
+  - QueryRowContextG
+  - ExecG
+  - ExecGP
+  - QueryG
+  - QueryGP
+  - ExecContextG
+  - ExecContextP
+  - ExecContextGP
+  - QueryContextG
+  - QueryContextP
+  - QueryContextGP
+
+### Fixed
+
+- Fix count from subquery on postgresql. (thanks @renom)
+- Cleanup unused imports after code generation. (thanks @eklatzer)
+- Fix InsertWhitelist test in composite primary key table. (thanks @benevolent0505)
+
+## [4.18.0] - 2025-01-03
+
+### Added
+
+- Added `--no-schema` option scaffolding. (thanks @morganhein)
+
+### Fixed
+
+- Revert change to `DeleteAll` method. The change causes incorrect changes on tables with multi-column primary keys
+
+## [4.17.1] - 2024-11-11
+
+### Fixed
+
+- Update the version constant to prevent inaccurate warnings about the version mismatch
+
+## [4.17.0] - 2024-11-10
+
+### Added
+
+- Add MySQL unix socket support (thanks @c9s)
+- Implement (Un-)marshalText for Decimal and NullDecimal (thanks @MJacred)
+- Add version checking flags to make sure CLI and project runtime versions are the same (thanks @090809)
+- Add SIMILAR TO method for Postgres (thanks @090809)
+- Skip code generation for replaced enum types using the flag `--skip-replaced-enum-types` (thanks @MJacred)
+
+### Fixed
+
+- Fix compilation errors with TIMESTAMP columns in sqlite3 driver (thanks @hirasawayuki)
+- Fix issue scanning `column_full_type` when `column_type` is NULL (thanks @mattdbush)
+- Fix performance issue with `DeleteAll` by using a `WHERE IN` instead of `WHERE OR` (thanks @jakeiotechsys)
+- Use renamed created column in `Update` method (thanks @glerchundi)
+- Fix comment position in first column of table (thanks @hizzuu)
+- Count from subquery if query uses HAVING or GROUP BY. This is because aggregate functions are run for each group separately, but we need to return the count of returned rows. (thanks @renom)
+- Fix output filenames that contain a forward slash or backslash. Replace with an underscore (thanks @MJacred)
+
 ## [4.16.2] - 2024-02-12
 
 ### Fixed

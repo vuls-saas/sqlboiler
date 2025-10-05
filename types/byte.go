@@ -45,7 +45,7 @@ func (b Byte) Value() (driver.Value, error) {
 }
 
 // Scan stores the src in *b.
-func (b *Byte) Scan(src interface{}) error {
+func (b *Byte) Scan(src any) error {
 	switch src.(type) {
 	case uint8:
 		*b = Byte(src.(uint8))
