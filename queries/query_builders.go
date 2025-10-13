@@ -62,6 +62,7 @@ func buildSelectQuery(q *Query) (*bytes.Buffer, []any) {
 	}
 
 	buf.WriteString("SELECT ")
+	writeOptimizerHints(q, buf)
 
 	if q.dialect.UseTopClause {
 		if q.limit != nil && q.offset == 0 {
@@ -644,3 +645,15 @@ func writeCTEs(q *Query, buf *bytes.Buffer, args *[]any) {
 	strmangle.PutBuffer(withBuf)
 }
 
+func writeOptimizerHints(q *Query, buf *bytes.Buffer) {
+	if len(q.optimizerHints) == 0 {
+		return
+	}
+
+	buf.WriteString("/*+ ")
+	for _, hint := range q.optimizerHints {
+		buf.WriteString(hint)
+		buf.WriteString(" ")
+	}
+	buf.WriteString("*/ ")
+}
