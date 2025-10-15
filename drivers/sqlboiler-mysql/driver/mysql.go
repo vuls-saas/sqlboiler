@@ -733,3 +733,8 @@ func (MySQLDriver) Imports() (col importers.Collection, err error) {
 	}
 	return col, err
 }
+// GetIndexes retrieves index information for a table.
+// MySQL support is not yet implemented.
+func (m *MySQLDriver) GetIndexes(schema, tableName string) ([]drivers.Index, error) {
+return nil, nil
+}
