@@ -131,7 +131,26 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "node_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				},
+				{
+					"name": "un_node_parent_root",
+					"columns": [
+						"id",
+						"root_id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "sponsors",
@@ -181,7 +200,17 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "sponsors_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "tags",
@@ -241,7 +270,17 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "tags_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "type_monsters",
@@ -2649,7 +2688,17 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "type_monsters_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "users",
@@ -2747,7 +2796,25 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "users_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				},
+				{
+					"name": "users_primary_email_key",
+					"columns": [
+						"primary_email"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "video_tags",
@@ -2824,7 +2891,18 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "video_tags_pkey",
+					"columns": [
+						"video_id",
+						"tag_id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "videos",
@@ -2945,7 +3023,25 @@
 			"view_capabilities": {
 				"can_insert": false,
 				"can_upsert": false
-			}
+			},
+			"indexes": [
+				{
+					"name": "videos_pkey",
+					"columns": [
+						"id"
+					],
+					"unique": true,
+					"method": "btree"
+				},
+				{
+					"name": "videos_sponsor_id_key",
+					"columns": [
+						"sponsor_id"
+					],
+					"unique": true,
+					"method": "btree"
+				}
+			]
 		},
 		{
 			"name": "type_monsters_mv",
