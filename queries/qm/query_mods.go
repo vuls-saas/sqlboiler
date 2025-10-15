@@ -589,3 +589,21 @@ type removeDeletedQueryMod struct{}
 func (removeDeletedQueryMod) Apply(q *queries.Query) {
 	queries.RemoveSoftDeleteWhere(q)
 }
+
+type optimizerHintQueryMod struct {
+	optimizerHint string
+	args          []interface{}
+}
+
+// Apply implements QueryMod.Apply.
+func (qm optimizerHintQueryMod) Apply(q *queries.Query) {
+	queries.AppendOptimizerHint(q, qm.optimizerHint, qm.args...)
+}
+
+// WithOptimizerHint adds an optimizer hint comment to the query
+func WithOptimizerHint(optimizerHint string, args ...interface{}) QueryMod {
+	return optimizerHintQueryMod{
+		optimizerHint: optimizerHint,
+		args:          args,
+	}
+}

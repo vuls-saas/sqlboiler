@@ -97,6 +97,56 @@ func (m testMockDriver) PrimaryKeyInfo(schema, tableName string) (*PrimaryKey, e
 	}[tableName], nil
 }
 
+func (m testMockDriver) GetIndexes(schema, tableName string) ([]Index, error) {
+	return map[string][]Index{
+		"pilots": {
+			// Primary key index
+			{Name: "pilot_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+		},
+		"airports": {
+			// Primary key index
+			{Name: "airport_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+		},
+		"jets": {
+			// Primary key index
+			{Name: "jet_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Unique index on pilot_id (simulating unique constraint)
+			{Name: "jets_pilot_id_unique", Columns: []string{"pilot_id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Unique index on manifest (simulating unique constraint)
+			{Name: "jets_manifest_unique", Columns: []string{"manifest"}, IsUnique: true, Method: IndexMethodBtree},
+			// Regular index on airport_id (simulating foreign key index)
+			{Name: "jets_airport_id_idx", Columns: []string{"airport_id"}, IsUnique: false, Method: IndexMethodBtree},
+			// Index for UUID search
+			{Name: "jets_uuid_idx", Columns: []string{"uuid"}, IsUnique: false, Method: IndexMethodHash},
+		},
+		"languages": {
+			// Primary key index
+			{Name: "language_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Unique index on language column
+			{Name: "languages_language_unique", Columns: []string{"language"}, IsUnique: true, Method: IndexMethodBtree},
+		},
+		"pilot_languages": {
+			// Composite primary key index
+			{Name: "pilot_languages_pkey", Columns: []string{"pilot_id", "language_id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Composite index for foreign key lookup
+			{Name: "pilot_languages_pilot_id_idx", Columns: []string{"pilot_id"}, IsUnique: false, Method: IndexMethodBtree},
+			{Name: "pilot_languages_language_id_idx", Columns: []string{"language_id"}, IsUnique: false, Method: IndexMethodBtree},
+		},
+		"hangars": {
+			// Primary key index
+			{Name: "hangar_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Unique index on nullable column
+			{Name: "hangars_name_unique", Columns: []string{"name"}, IsUnique: true, Method: IndexMethodBtree},
+		},
+		"licenses": {
+			// Primary key index
+			{Name: "license_id_pkey", Columns: []string{"id"}, IsUnique: true, Method: IndexMethodBtree},
+			// Regular index for foreign key
+			{Name: "licenses_pilot_id_idx", Columns: []string{"pilot_id"}, IsUnique: false, Method: IndexMethodBtree},
+		},
+	}[tableName], nil
+}
+
 // UniqueKeyInfo returns mock unique key info for the passed in table name
 func (m testMockDriver) UniqueKeyInfo(schema, tableName string) ([]UniqueKey, error) {
 	return map[string][]UniqueKey{}[tableName], nil
@@ -167,6 +217,17 @@ func TestTables(t *testing.T) {
 	}
 	if len(hangars.FKeys) != 1 || hangars.FKeys[0].ForeignTable != "hangars" {
 		t.Error("want one hangar foreign key to itself")
+	}
+
+	// Test indexes (now including primary keys)
+	if len(jets.Indexes) != 5 {
+		t.Errorf("jets should have 5 indexes (including primary key), got: %d", len(jets.Indexes))
+	}
+	if len(pilots.Indexes) != 1 {
+		t.Errorf("pilots should have 1 index (primary key), got: %d", len(pilots.Indexes))
+	}
+	if len(languages.Indexes) != 2 {
+		t.Errorf("languages should have 2 indexes (including primary key), got: %d", len(languages.Indexes))
 	}
 }
 

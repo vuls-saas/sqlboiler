@@ -707,3 +707,36 @@ func TestWriteComment(t *testing.T) {
 		t.Errorf(`bad two lines comment, got: %s`, got)
 	}
 }
+
+func TestWriteOptimizerHints(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	query := Query{
+		dialect: &drivers.Dialect{LQ: '"', RQ: '"', UseIndexPlaceholders: true},
+	}
+
+	// empty optimizer hints
+	buf.Reset()
+	query.optimizerHints = []string{}
+	writeOptimizerHints(&query, &buf)
+	if got := buf.String(); got != "" {
+		t.Errorf(`bad empty optimizer hints, got: %s`, got)
+	}
+
+	// one line optimizer hint
+	buf.Reset()
+	query.optimizerHints = []string{"SeqScan(a)"}
+	writeOptimizerHints(&query, &buf)
+	if got := buf.String(); got != "/*+ SeqScan(a) */ " {
+		t.Errorf(`bad one line optimizer hint, got: %s`, got)
+	}
+
+	// two lines optimizer hints
+	buf.Reset()
+	query.optimizerHints = []string{"SeqScan(a)", "IndexScan(b c)"}
+	writeOptimizerHints(&query, &buf)
+	if got := buf.String(); got != "/*+ SeqScan(a) IndexScan(b c) */ " {
+		t.Errorf(`bad two lines optimizer hints, got: %s`, got)
+	}
+}

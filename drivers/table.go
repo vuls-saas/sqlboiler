@@ -15,6 +15,7 @@ type Table struct {
 	PKey  *PrimaryKey  `json:"p_key"`
 	UKeys []UniqueKey  `json:"u_keys"`
 	FKeys []ForeignKey `json:"f_keys"`
+	Indexes []Index     `json:"indexes"`
 
 	IsJoinTable bool `json:"is_join_table"`
 

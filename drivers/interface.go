@@ -6,8 +6,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/friendsofgo/errors"
 	"github.com/aarondl/strmangle"
+	"github.com/friendsofgo/errors"
 
 	"github.com/aarondl/sqlboiler/v4/importers"
 )
@@ -89,6 +89,7 @@ type Constructor interface {
 	PrimaryKeyInfo(schema, tableName string) (*PrimaryKey, error)
 	UniqueKeyInfo(schema, tableName string) ([]UniqueKey, error)
 	ForeignKeyInfo(schema, tableName string) ([]ForeignKey, error)
+	GetIndexes(schema, tableName string) ([]Index, error)
 
 	// TranslateColumnType takes a Database column type and returns a go column type.
 	TranslateColumnType(Column) Column
@@ -186,6 +187,10 @@ func tables(c Constructor, schema string, whitelist, blacklist []string, concurr
 				return
 			}
 
+			if t.Indexes, err = c.GetIndexes(schema, name); err != nil {
+				errs <- errors.Wrapf(err, "unable to fetch table index info (%s)", name)
+			}
+
 			filterForeignKeys(&t, whitelist, blacklist)
 			setIsJoinTable(&t)
 
@@ -249,6 +254,10 @@ func table(c Constructor, schema string, name string, whitelist, blacklist []str
 
 	if t.FKeys, err = c.ForeignKeyInfo(schema, name); err != nil {
 		return Table{}, errors.Wrapf(err, "unable to fetch table fkey info (%s)", name)
+	}
+
+	if t.Indexes, err = c.GetIndexes(schema, name); err != nil {
+		return Table{}, errors.Wrapf(err, "unable to fetch table index info (%s)", name)
 	}
 
 	filterPrimaryKey(t, whitelist, blacklist)

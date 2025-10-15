@@ -690,3 +690,8 @@ func (SQLiteDriver) Imports() (col importers.Collection, err error) {
 	}
 	return col, err
 }
+// GetIndexes retrieves index information for a table.
+// SQLite3 support is not yet implemented.
+func (s SQLiteDriver) GetIndexes(schema, tableName string) ([]drivers.Index, error) {
+return nil, nil
+}
