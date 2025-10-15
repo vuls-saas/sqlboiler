@@ -160,7 +160,7 @@ func (o *{{$alias.UpSingular}}) UpsertBy{{$index.TitleCase}}({{if $.NoContext}}e
 {{- end }}
 {{- end }}
 
-{{ if .AddStrictUpsert }}
+{{ if and .AddStrictUpsert .Table.PKey }}
 
 // UpsertBy{{.Table.PKey.TitleCase}} attempts an insert using an executor, and does an update or ignore on conflict.
 // Primary Key is {{.Table.PKey.Columns}}
