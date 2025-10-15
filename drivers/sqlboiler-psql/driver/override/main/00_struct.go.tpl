@@ -75,6 +75,17 @@ var {{$alias.UpSingular}}TableColumns = struct {
 	{{end -}}
 }
 
+// {{$alias.UpSingular}}Indexes exposes stable identifiers for table indexes
+var {{$alias.UpSingular}}Indexes = struct {
+	{{- range $index := .Table.Indexes }}
+	{{$index.TitleCase}} string
+	{{- end }}
+}{
+	{{- range $index := .Table.Indexes }}
+	{{$index.TitleCase}}: "{{$index.Name}}",
+	{{- end }}
+}
+
 {{/* Generated where helpers for all types in the database */}}
 // Generated where
 {{- range .Table.Columns -}}
