@@ -2,9 +2,12 @@
 drop table if exists node;
 drop table if exists video_tags;
 drop table if exists tags;
+drop view if exists user_videos;
 drop table if exists videos;
 drop table if exists sponsors;
 drop table if exists users;
+drop materialized view if exists type_monsters_mv;
+drop view if exists type_monsters_v;
 drop table if exists type_monsters;
 drop view if exists user_videos;
 drop view if exists type_monsters_v;

@@ -658,3 +658,8 @@ func (MSSQLDriver) Imports() (col importers.Collection, err error) {
 	}
 	return col, err
 }
+// GetIndexes retrieves index information for a table.
+// MSSQL support is not yet implemented.
+func (m *MSSQLDriver) GetIndexes(schema, tableName string) ([]drivers.Index, error) {
+return nil, nil
+}

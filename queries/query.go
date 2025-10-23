@@ -30,22 +30,23 @@ type Query struct {
 	load     []string
 	loadMods map[string]Applicator
 
-	delete     bool
-	update     map[string]any
-	withs      []argClause
-	selectCols []string
-	count      bool
-	from       []string
-	joins      []join
-	where      []where
-	groupBy    []string
-	orderBy    []argClause
-	having     []argClause
-	limit      *int
-	offset     int
-	forlock    string
-	distinct   string
-	comment    string
+	delete         bool
+	update         map[string]any
+	withs          []argClause
+	optimizerHints []string
+	selectCols     []string
+	count          bool
+	from           []string
+	joins          []join
+	where          []where
+	groupBy        []string
+	orderBy        []argClause
+	having         []argClause
+	limit          *int
+	offset         int
+	forlock        string
+	distinct       string
+	comment        string
 
 	// This field is a hack to allow a query to strip out the reference
 	// to deleted at is null.
@@ -328,6 +329,16 @@ func GetSelect(q *Query) []string {
 	return q.selectCols
 }
 
+// SetOptimizerHints on the query.
+func SetOptimizerHints(q *Query, optimizerHints []string) {
+	q.optimizerHints = optimizerHints
+}
+
+// GetOptimizerHints from the query
+func GetOptimizerHints(q *Query) []string {
+	return q.optimizerHints
+}
+
 // SetDistinct on the query.
 func SetDistinct(q *Query, distinct string) {
 	q.distinct = distinct
@@ -371,6 +382,11 @@ func SetUpdate(q *Query, cols map[string]any) {
 // AppendSelect on the query.
 func AppendSelect(q *Query, columns ...string) {
 	q.selectCols = append(q.selectCols, columns...)
+}
+
+// AppendOptimizerHint on the query.
+func AppendOptimizerHint(q *Query, optimizerHint string, args ...interface{}) {
+	q.optimizerHints = append(q.optimizerHints, fmt.Sprintf(optimizerHint, args...))
 }
 
 // AppendFrom on the query.

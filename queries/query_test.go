@@ -324,6 +324,16 @@ func TestSetSelect(t *testing.T) {
 	}
 }
 
+func TestSetOptimizerHints(t *testing.T) {
+	t.Parallel()
+
+	q := &Query{}
+	SetOptimizerHints(q, []string{"hint1", "hint2"})
+	if q.optimizerHints[0] != "hint1" || q.optimizerHints[1] != "hint2" {
+		t.Errorf("expected [hint1 hint2], got %v", q.optimizerHints)
+	}
+}
+
 func TestSetCount(t *testing.T) {
 	t.Parallel()
 
@@ -640,6 +650,17 @@ func TestAppendWith(t *testing.T) {
 
 	if q.withs[0].clause != "other_cte AS (SELECT * FROM other_table WHERE thing=$1 AND stuff=$2)" {
 		t.Errorf("Got invalid with on string: %#v", q.withs)
+	}
+}
+
+func TestAppendOptimizerHints(t *testing.T) {
+	t.Parallel()
+
+	q := &Query{}
+	AppendOptimizerHint(q, "hint1")
+	AppendOptimizerHint(q, "hint2")
+	if q.optimizerHints[0] != "hint1" || q.optimizerHints[1] != "hint2" {
+		t.Errorf("expected [hint1 hint2], got %v", q.optimizerHints)
 	}
 }
 
