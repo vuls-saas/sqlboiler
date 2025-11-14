@@ -509,33 +509,23 @@ func (o *{{$alias.UpSingular}}) UpsertDoNothing({{if .NoContext}}exec boil.Execu
 	var err error
 
 	if !cached {
-		insert, ret := insertColumns.InsertColumnSet(
+		insert, _ := insertColumns.InsertColumnSet(
 			{{$alias.DownSingular}}AllColumns,
 			{{$alias.DownSingular}}ColumnsWithDefault,
 			{{$alias.DownSingular}}ColumnsWithoutDefault,
 			nzDefaults,
 		)
 
-		cache.query = buildUpsertQueryPostgres(dialect, "{{$schemaTable}}", false, ret, nil, nil, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "{{$schemaTable}}", false, nil, nil, nil, insert)
 
 		cache.valueMapping, err = queries.BindMapping({{$alias.DownSingular}}Type, {{$alias.DownSingular}}Mapping, insert)
 		if err != nil {
 			return err
 		}
-		if len(ret) != 0 {
-			cache.retMapping, err = queries.BindMapping({{$alias.DownSingular}}Type, {{$alias.DownSingular}}Mapping, ret)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
 	vals := queries.ValuesFromMapping(value, cache.valueMapping)
-	var returns []interface{}
-	if len(cache.retMapping) != 0 {
-		returns = queries.PtrsFromMapping(value, cache.retMapping)
-	}
 
 	{{if .NoContext -}}
 	if boil.DebugMode {
@@ -550,22 +540,11 @@ func (o *{{$alias.UpSingular}}) UpsertDoNothing({{if .NoContext}}exec boil.Execu
 	}
 	{{end -}}
 
-	if len(cache.retMapping) != 0 {
-		{{if .NoContext -}}
-		err = exec.QueryRow(cache.query, vals...).Scan(returns...)
-		{{else -}}
-		err = exec.QueryRowContext(ctx, cache.query, vals...).Scan(returns...)
-		{{end -}}
-    if errors.Is(err, sql.ErrNoRows) {
-			err = nil // Postgres doesn't return anything when there's no update
-		}
-	} else {
-		{{if .NoContext -}}
-		_, err = exec.Exec(cache.query, vals...)
-		{{else -}}
-		_, err = exec.ExecContext(ctx, cache.query, vals...)
-		{{end -}}
-	}
+	{{if .NoContext -}}
+	_, err = exec.Exec(cache.query, vals...)
+	{{else -}}
+	_, err = exec.ExecContext(ctx, cache.query, vals...)
+	{{end -}}
 	if err != nil {
 		return errors.Wrap(err, "{{.PkgName}}: unable to upsert {{.Table.Name}}")
 	}
