@@ -724,7 +724,8 @@ func (p *PostgresDriver) UniqueKeyInfo(schema, tableName string) ([]drivers.Uniq
 	query := `
 	select tc.constraint_name
 	from information_schema.table_constraints as tc
-	where tc.table_name = $1 and tc.constraint_type = 'UNIQUE' and tc.table_schema = $2;`
+	where tc.table_name = $1 and tc.constraint_type = 'UNIQUE' and tc.table_schema = $2
+	order by tc.constraint_name;`
 
 	var rows *sql.Rows
 	if rows, err = p.conn.Query(query, tableName, schema); err != nil {
